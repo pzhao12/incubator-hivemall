@@ -35,8 +35,7 @@ language: java
 script:
 - touch NOW
 - echo GIBSTUDYSTART $(date)
-- mvn -q scalastyle:check test -Pspark-2.1
-- mvn -q scalastyle:check clean -Pspark-2.0 -pl spark/spark-2.0 -am test -Dtest=none
+- ./bin/run_travis_tests.sh
 - echo GIBSTUDYEND $(date)
 - cd $TRAVIS_BUILD_DIR
 - if [ "$TRAVIS_OS_NAME" == "osx" ];        then echo TESTNUM $(find . -name TEST-*.xml
