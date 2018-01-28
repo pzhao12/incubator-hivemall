@@ -18,12 +18,8 @@
  */
 package hivemall.evaluation;
 
-import hivemall.utils.lang.Preconditions;
-import hivemall.utils.math.MathUtils;
-
 import java.util.List;
 
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 
 /**
@@ -36,7 +32,7 @@ public final class GradedResponsesMeasures {
     private GradedResponsesMeasures() {}
 
     public static double nDCG(@Nonnull final List<Double> recommendTopRelScoreList,
-            @Nonnull final List<Double> truthTopRelScoreList, @Nonnegative final int recommendSize) {
+            @Nonnull final List<Double> truthTopRelScoreList, @Nonnull final int recommendSize) {
         double dcg = DCG(recommendTopRelScoreList, recommendSize);
         double idcg = DCG(truthTopRelScoreList, recommendSize);
         return dcg / idcg;
@@ -49,15 +45,11 @@ public final class GradedResponsesMeasures {
      * @param recommendSize the number of positive items
      * @return DCG
      */
-    public static double DCG(@Nonnull final List<Double> topRelScoreList,
-            @Nonnegative final int recommendSize) {
-        Preconditions.checkArgument(recommendSize >= 0);
-
+    public static double DCG(final List<Double> topRelScoreList, final int recommendSize) {
         double dcg = 0.d;
-        final int k = Math.min(topRelScoreList.size(), recommendSize);
-        for (int i = 0; i < k; i++) {
+        for (int i = 0; i < recommendSize; i++) {
             double relScore = topRelScoreList.get(i);
-            dcg += ((Math.pow(2, relScore) - 1) * MathUtils.LOG2) / Math.log(i + 2);
+            dcg += ((Math.pow(2, relScore) - 1) * Math.log(2)) / Math.log(i + 2);
         }
         return dcg;
     }

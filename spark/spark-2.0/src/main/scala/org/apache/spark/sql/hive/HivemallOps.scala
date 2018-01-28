@@ -519,7 +519,7 @@ final class HivemallOps(df: DataFrame) extends Logging {
   def train_xgboost_regr(exprs: Column*): DataFrame = withTypedPlan {
     planHiveGenericUDTF(
       df,
-      "hivemall.xgboost.regression.XGBoostRegressionUDTF",
+      "hivemall.xgboost.regression.XGBoostRegressionUDTFWrapper",
       "train_xgboost_regr",
       setMixServs(toHivemallFeatures(exprs)),
       Seq("model_id", "pred_model")
@@ -536,7 +536,7 @@ final class HivemallOps(df: DataFrame) extends Logging {
   def train_xgboost_classifier(exprs: Column*): DataFrame = withTypedPlan {
     planHiveGenericUDTF(
       df,
-      "hivemall.xgboost.classification.XGBoostBinaryClassifierUDTF",
+      "hivemall.xgboost.classification.XGBoostBinaryClassifierUDTFWrapper",
       "train_xgboost_classifier",
       setMixServs(toHivemallFeatures(exprs)),
       Seq("model_id", "pred_model")
@@ -553,7 +553,7 @@ final class HivemallOps(df: DataFrame) extends Logging {
   def train_xgboost_multiclass_classifier(exprs: Column*): DataFrame = withTypedPlan {
     planHiveGenericUDTF(
       df,
-      "hivemall.xgboost.classification.XGBoostMulticlassClassifierUDTF",
+      "hivemall.xgboost.classification.XGBoostMulticlassClassifierUDTFWrapper",
       "train_xgboost_multiclass_classifier",
       setMixServs(toHivemallFeatures(exprs)),
       Seq("model_id", "pred_model")

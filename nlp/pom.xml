@@ -21,9 +21,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.apache.hivemall</groupId>
+		<groupId>io.github.myui</groupId>
 		<artifactId>hivemall</artifactId>
-		<version>0.5.0-incubating-SNAPSHOT</version>
+		<version>0.4.2-rc.2</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -104,7 +104,7 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.hivemall</groupId>
+			<groupId>io.github.myui</groupId>
 			<artifactId>hivemall-core</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
@@ -160,7 +160,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>2.3</version>
 				<executions>
 					<execution>
 						<id>jar-with-dependencies</id>
@@ -175,7 +175,7 @@
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<artifactSet>
 								<includes>
-									<include>org.apache.hivemall:hivemall-core</include>
+									<include>io.github.myui:hivemall-core</include>
 									<include>org.apache.lucene:lucene-analyzers-kuromoji</include>
 									<include>org.apache.lucene:lucene-analyzers-smartcn</include>
 									<include>org.apache.lucene:lucene-analyzers-common</include>
@@ -183,12 +183,6 @@
 								</includes>
 							</artifactSet>
 							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>META-INF/LICENSE.txt</exclude>
-									</excludes>
-								</filter>
 								<filter>
 									<artifact>org.apache.lucene:lucene-analyzers-kuromoji</artifact>
 									<includes>
@@ -222,9 +216,6 @@
 										<Implementation-Version>${project.version}</Implementation-Version>
 										<Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
 									</manifestEntries>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
-									<addHeader>false</addHeader>
 								</transformer>
 							</transformers>
 						</configuration>

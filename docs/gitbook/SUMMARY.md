@@ -27,7 +27,7 @@
     * [Input Format](getting_started/input-format.md)
 
 * [Tips for Effective Hivemall](tips/README.md)
-    * [Explicit add_bias() for better prediction](tips/addbias.md)
+    * [Explicit addBias() for better prediction](tips/addbias.md)
     * [Use rand_amplify() to better prediction results](tips/rand_amplify.md)
     * [Real-time Prediction on RDBMS](tips/rt_prediction.md)
     * [Ensemble learning for stable prediction](tips/ensemble_learning.md)
@@ -50,7 +50,6 @@
 * [List of generic Hivemall functions](misc/generic_funcs.md)
 * [Efficient Top-K query processing](misc/topk.md)
 * [Text Tokenizer](misc/tokenizer.md)
-* [Approximate Aggregate Functions](misc/approx.md)
 
 ## Part III - Feature Engineering
 
@@ -67,10 +66,9 @@
 
 ## Part IV - Evaluation
 
-* [Binary Classification Metrics](eval/binary_classification_measures.md)
+* [Statistical evaluation of a prediction model](eval/stat_eval.md)
     * [Area Under the ROC Curve](eval/auc.md)
-* [Multi-label Classification Metrics](eval/multilabel_classification_measures.md)
-* [Regression metrics](eval/regression.md)
+    
 * [Ranking Measures](eval/rank.md)
 
 * [Data Generation](eval/datagen.md)
@@ -156,7 +154,6 @@
     * [Item-based Collaborative Filtering](recommend/movielens_cf.md)
     * [Matrix Factorization](recommend/movielens_mf.md)
     * [Factorization Machine](recommend/movielens_fm.md)
-    * [SLIM for Fast Top-K Recommendation](recommend/movielens_slim.md)
     * [10-fold Cross Validation (Matrix Factorization)](recommend/movielens_cv.md)
 
 ## Part X - Anomaly Detection
@@ -181,11 +178,9 @@
 
 * [Binary Classification](spark/binaryclass/index.md)
     * [a9a Tutorial for DataFrame](spark/binaryclass/a9a_df.md)
-    * [a9a Tutorial for SQL](spark/binaryclass/a9a_sql.md)
 
 * [Regression](spark/binaryclass/index.md)
     * [E2006-tfidf regression Tutorial for DataFrame](spark/regression/e2006_df.md)
-    * [E2006-tfidf regression Tutorial for SQL](spark/regression/e2006_sql.md)
 
 * [Generic features](spark/misc/misc.md)
     * [Top-k Join processing](spark/misc/topk_join.md)

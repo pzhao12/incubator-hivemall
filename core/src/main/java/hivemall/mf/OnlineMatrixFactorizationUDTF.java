@@ -147,8 +147,8 @@ public abstract class OnlineMatrixFactorizationUDTF extends UDTFWithOptions impl
             initStdDev = Primitives.parseDouble(cl.getOptionValue("min_init_stddev"), 0.1d);
             this.iterations = Primitives.parseInt(cl.getOptionValue("iterations"), 1);
             if (iterations < 1) {
-                throw new UDFArgumentException("'-iterations' must be greater than or equal to 1: "
-                        + iterations);
+                throw new UDFArgumentException(
+                    "'-iterations' must be greater than or equals to 1: " + iterations);
             }
             conversionCheck = !cl.hasOption("disable_cvtest");
             convergenceRate = Primitives.parseDouble(cl.getOptionValue("cv_rate"), convergenceRate);
@@ -239,7 +239,7 @@ public abstract class OnlineMatrixFactorizationUDTF extends UDTFWithOptions impl
         }
         int item = PrimitiveObjectInspectorUtils.getInt(args[1], itemOI);
         if (item < 0) {
-            throw new HiveException("Illegal item index: " + item);
+            throw new HiveException("Illegal item index: " + user);
         }
         double rating = PrimitiveObjectInspectorUtils.getDouble(args[2], ratingOI);
 
@@ -477,8 +477,8 @@ public abstract class OnlineMatrixFactorizationUDTF extends UDTFWithOptions impl
                 }
                 inputBuf.flip();
 
-                for (int iter = 2; iter <= iterations; iter++) {
-                    cvState.next();
+                int iter = 2;
+                for (; iter <= iterations; iter++) {
                     reportProgress(reporter);
                     setCounterValue(iterCounter, iter);
 
@@ -491,12 +491,12 @@ public abstract class OnlineMatrixFactorizationUDTF extends UDTFWithOptions impl
                         train(user, item, rating);
                     }
                     cvState.multiplyLoss(0.5d);
-                    if (cvState.isConverged(numTrainingExamples)) {
+                    if (cvState.isConverged(iter, numTrainingExamples)) {
                         break;
                     }
                     inputBuf.rewind();
                 }
-                logger.info("Performed " + cvState.getCurrentIteration() + " iterations of "
+                logger.info("Performed " + Math.min(iter, iterations) + " iterations of "
                         + NumberUtils.formatNumber(numTrainingExamples)
                         + " training examples on memory (thus " + NumberUtils.formatNumber(count)
                         + " training updates in total) ");
@@ -505,8 +505,9 @@ public abstract class OnlineMatrixFactorizationUDTF extends UDTFWithOptions impl
                 // write training examples in buffer to a temporary file
                 if (inputBuf.position() > 0) {
                     writeBuffer(inputBuf, fileIO, lastWritePos);
+                } else if (lastWritePos == 0) {
+                    return; // no training example
                 }
-
                 try {
                     fileIO.flush();
                 } catch (IOException e) {
@@ -522,8 +523,8 @@ public abstract class OnlineMatrixFactorizationUDTF extends UDTFWithOptions impl
                 }
 
                 // run iterations
-                for (int iter = 2; iter <= iterations; iter++) {
-                    cvState.next();
+                int iter = 2;
+                for (; iter <= iterations; iter++) {
                     setCounterValue(iterCounter, iter);
 
                     inputBuf.clear();
@@ -560,11 +561,11 @@ public abstract class OnlineMatrixFactorizationUDTF extends UDTFWithOptions impl
                         inputBuf.compact();
                     }
                     cvState.multiplyLoss(0.5d);
-                    if (cvState.isConverged(numTrainingExamples)) {
+                    if (cvState.isConverged(iter, numTrainingExamples)) {
                         break;
                     }
                 }
-                logger.info("Performed " + cvState.getCurrentIteration() + " iterations of "
+                logger.info("Performed " + Math.min(iter, iterations) + " iterations of "
                         + NumberUtils.formatNumber(numTrainingExamples)
                         + " training examples using a secondary storage (thus "
                         + NumberUtils.formatNumber(count) + " training updates in total)");

@@ -38,11 +38,10 @@ import org.apache.hadoop.hive.serde2.io.DoubleWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
-import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.WritableIntObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.io.LongWritable;
@@ -52,6 +51,9 @@ import org.apache.hadoop.io.LongWritable;
         value = "_FUNC_(array rankItems, array correctItems [, const int recommendSize = rankItems.size])"
                 + " - Returns MRR")
 public final class MRRUDAF extends AbstractGenericUDAFResolver {
+
+    // prevent instantiation
+    private MRRUDAF() {}
 
     @Override
     public GenericUDAFEvaluator getEvaluator(@Nonnull TypeInfo[] typeInfo) throws SemanticException {
@@ -78,7 +80,7 @@ public final class MRRUDAF extends AbstractGenericUDAFResolver {
 
         private ListObjectInspector recommendListOI;
         private ListObjectInspector truthListOI;
-        private PrimitiveObjectInspector recommendSizeOI;
+        private WritableIntObjectInspector recommendSizeOI;
 
         private StructObjectInspector internalMergeOI;
         private StructField countField;
@@ -88,7 +90,7 @@ public final class MRRUDAF extends AbstractGenericUDAFResolver {
 
         @Override
         public ObjectInspector init(Mode mode, ObjectInspector[] parameters) throws HiveException {
-            assert (parameters.length >= 1 && parameters.length <= 3) : parameters.length;
+            assert (parameters.length == 2 || parameters.length == 3) : parameters.length;
             super.init(mode, parameters);
 
             // initialize input
@@ -96,7 +98,7 @@ public final class MRRUDAF extends AbstractGenericUDAFResolver {
                 this.recommendListOI = (ListObjectInspector) parameters[0];
                 this.truthListOI = (ListObjectInspector) parameters[1];
                 if (parameters.length == 3) {
-                    this.recommendSizeOI = HiveUtils.asIntegerOI(parameters[2]);
+                    this.recommendSizeOI = (WritableIntObjectInspector) parameters[2];
                 }
             } else {// from partial aggregation
                 StructObjectInspector soi = (StructObjectInspector) parameters[0];
@@ -157,12 +159,12 @@ public final class MRRUDAF extends AbstractGenericUDAFResolver {
 
             int recommendSize = recommendList.size();
             if (parameters.length == 3) {
-                recommendSize = PrimitiveObjectInspectorUtils.getInt(parameters[2], recommendSizeOI);
-                if (recommendSize < 0) {
-                    throw new UDFArgumentException(
-                        "The third argument `int recommendSize` must be in greather than or equals to 0: "
-                                + recommendSize);
-                }
+                recommendSize = recommendSizeOI.get(parameters[2]);
+            }
+            if (recommendSize < 0 || recommendSize > recommendList.size()) {
+                throw new UDFArgumentException(
+                    "The third argument `int recommendSize` must be in [0, " + recommendList.size()
+                            + "]");
             }
 
             myAggr.iterate(recommendList, truthList, recommendSize);
@@ -233,7 +235,7 @@ public final class MRRUDAF extends AbstractGenericUDAFResolver {
 
         void iterate(@Nonnull List<?> recommendList, @Nonnull List<?> truthList,
                 @Nonnull int recommendSize) {
-            sum += BinaryResponsesMeasures.ReciprocalRank(recommendList, truthList, recommendSize);
+            sum += BinaryResponsesMeasures.MRR(recommendList, truthList, recommendSize);
             count++;
         }
     }

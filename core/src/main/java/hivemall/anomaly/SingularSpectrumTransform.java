@@ -186,14 +186,14 @@ final class SingularSpectrumTransform implements SingularSpectrumTransformInterf
         for (int i = 0; i < k; i++) {
             map.put(eigvals[i], i);
         }
-        Iterator<Integer> indices = map.values().iterator();
+        Iterator<Integer> indicies = map.values().iterator();
 
         double s = 0.d;
         for (int i = 0; i < r; i++) {
-            if (!indices.hasNext()) {
+            if (!indicies.hasNext()) {
                 throw new IllegalStateException("Should not happen");
             }
-            double v = eigvecs.getEntry(0, indices.next().intValue());
+            double v = eigvecs.getEntry(0, indicies.next().intValue());
             s += v * v;
         }
         return 1.d - Math.sqrt(s);

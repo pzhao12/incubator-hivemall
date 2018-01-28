@@ -1,41 +1,45 @@
-sudo: false
-
-env:
-  global:
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
-   - secure: "gYAzVukFw3ssmQzfovoKTNJnzQbUhF13tksHHhe5dqQWglxdix39wY405nMmzRm/21ZpIq3OFIlI7fnHdZSGkVPS/nPPxbzUkjYUh+zkujYwsqgjZecq9vGaoarnyV9CcI+2D6qUVnArHQ02FKxirtXduGvElZ/eRIa/hBfpgn4="
-
-#addons:
-#  coverity_scan:
-#    project:
-#      name: "myui/hivemall"
-#      description: "Build submitted via Travis CI"
-#    notification_email: false
-#    build_command_prepend: "mvn clean"
-#    build_command:   "mvn -DskipTests=true compile"
-#    branch_pattern: master
-
-language: java
-jdk:
-  - openjdk7
-# - oraclejdk7
-  - oraclejdk8
-# - oraclejdk9
-
+after_success:
+- mvn clean cobertura:cobertura coveralls:report
+before_cache:
+- rm -rf $HOME/CACHE; find $TRAVIS_BUILD_DIR -name .ekstazi | while read line; do
+  du -sh $line;         DIR=$(dirname $HOME/CACHE$line); mkdir -p $DIR; cp -r $line
+  $DIR; done
+- echo CACHESIZE $(du -sk $HOME/CACHE)
+before_install:
+- if [ "$TRAVIS_OS_NAME" == "osx" ];        then sed -i '' 's/<gib.enabled>true/<gib.enabled>false/'
+  $TRAVIS_BUILD_DIR/pom.xml;        else sed -i 's/<gib.enabled>true/<gib.enabled>false/'
+  $TRAVIS_BUILD_DIR/pom.xml;        fi
+- find $HOME/CACHE -name .ekstazi | while read line; do du -sh $line;         DIR=$(dirname
+  ${line#$HOME/CACHE}); if [[ -d ${DIR#.ekstazi/} ]]; then cp -r $line $DIR; fi; done
+- mvn validate -Pxgboost
+before_script:
+- find $TRAVIS_BUILD_DIR -name .ekstazi | while read line; do rm -rf $line; done
+- find $HOME/CACHE -name .ekstazi | while read line; do du -sh $line;         DIR=$(dirname
+  ${line#$HOME/CACHE}); if [[ -d ${DIR#.ekstazi/} ]]; then cp -r $line $DIR; fi; done
+- if [ "$TRAVIS_OS_NAME" == "osx" ];    then sed -i '' 's/<gib.enabled>false/<gib.enabled>true/'
+  $TRAVIS_BUILD_DIR/pom.xml;    else sed -i 's/<gib.enabled>false/<gib.enabled>true/'
+  $TRAVIS_BUILD_DIR/pom.xml;    fi
 branches:
   only:
-    - master
-    - develop
-
-before_install:
-  - mvn validate -Pcompile-xgboost
-
-notifications:
-  email: false
-
+  - master
+  - develop
+cache:
+  directories:
+  - $HOME/CACHE
+env:
+  global:
+  - secure: gYAzVukFw3ssmQzfovoKTNJnzQbUhF13tksHHhe5dqQWglxdix39wY405nMmzRm/21ZpIq3OFIlI7fnHdZSGkVPS/nPPxbzUkjYUh+zkujYwsqgjZecq9vGaoarnyV9CcI+2D6qUVnArHQ02FKxirtXduGvElZ/eRIa/hBfpgn4=
+jdk:
+- oraclejdk8
+language: java
 script:
-  - ./bin/run_travis_tests.sh
-
-after_success:
-  - mvn clean cobertura:cobertura coveralls:report
+- touch NOW
+- echo GIBSTUDYSTART $(date)
+- mvn -q scalastyle:check test -Pspark-2.1
+- mvn -q scalastyle:check clean -Pspark-2.0 -pl spark/spark-2.0 -am test -Dtest=none
+- echo GIBSTUDYEND $(date)
+- cd $TRAVIS_BUILD_DIR
+- if [ "$TRAVIS_OS_NAME" == "osx" ];        then echo TESTNUM $(find . -name TEST-*.xml
+  -newer NOW | wc -l);        else echo TESTNUM $(find -name TEST-*.xml -newer NOW
+  | wc -l);        fi
+sudo: false

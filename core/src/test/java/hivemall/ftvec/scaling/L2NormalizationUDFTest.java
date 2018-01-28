@@ -25,14 +25,13 @@ import hivemall.utils.math.MathUtils;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.io.Text;
 import org.junit.Test;
 
 public class L2NormalizationUDFTest {
 
     @Test
-    public void test() throws HiveException {
+    public void test() {
         L2NormalizationUDF udf = new L2NormalizationUDF();
 
         assertEquals(null, udf.evaluate(null));

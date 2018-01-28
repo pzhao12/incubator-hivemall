@@ -21,11 +21,6 @@
 
 <!-- toc -->
 
-> #### Caution
-> In order to obtain ranked list of items, this page introduces queries using `to_ordered_map()` such as `map_values(to_ordered_map(rating, movieid, true))`. However, this kind of usage has a potential issue that multiple `movieid`-s (i.e., values) which have the exactly same `rating` (i.e., key) will be aggregated to single arbitrary `movieid`, because `to_ordered_map()` creates a key-value map which uses duplicated `rating` as key.
->
-> Hence, if map key could duplicate on more then one map values, we recommend you to use `to_ordered_list(value, key, '-reverse')` instead of `map_values(to_ordered_map(key, value, true))`. The alternative approach is available from Hivemall v0.5-rc.1 or later.
-
 # Compute movie-movie similarity
 
 [As we explained in the general introduction of item-based CF](item_based_cf.html#dimsum-approximated-all-pairs-cosine-similarity-computation.md), following query finds top-$$k$$ nearest-neighborhood movies for each movie:
@@ -66,8 +61,7 @@ partial_result as ( -- launch DIMSUM in a MapReduce fashion
     movie_features f
   left outer join movie_magnitude m
 ),
-similarity as (
-    -- reduce (i.e., sum up) mappers' partial results 
+similarity as ( -- reduce (i.e., sum up) mappers' partial results
 	select
 	  movieid, 
 	  other,
@@ -235,8 +229,8 @@ with truth as (
     userid
 )
 select 
-  recall_at(t1.rec_movies, t2.truth, 10) as recall,
-  precision_at(t1.rec_movies, t2.truth, 10) as precision,
+  recall(t1.rec_movies, t2.truth, 10) as recall,
+  precision(t1.rec_movies, t2.truth, 10) as precision,
   average_precision(t1.rec_movies, t2.truth) as average_precision,
   auc(t1.rec_movies, t2.truth) as auc,
   mrr(t1.rec_movies, t2.truth) as mrr,
@@ -260,6 +254,3 @@ where -- at least 10 recommended items are necessary to compute recall@10 and pr
 |**NDCG**| 0.15787655209987522 |
 
 If you set larger value to the DIMSUM's `-threshold` option, similarity will be more aggressively approximated. Consequently, while efficiency is improved, the accuracy is likely to be decreased.
-
-> #### Caution
-> Before Hivemall v0.5-rc.1, `recall_at()` and `precision_at()` are respectively registered as `recall()` and `precision()`. However, since `precision` is a reserved keyword from Hive v2.2.0, [we renamed the function names](https://issues.apache.org/jira/browse/HIVEMALL-140). If you are still using `recall()` and/or `precision()`, we strongly recommend you to use the latest version of Hivemall and replace them with the newer function names.

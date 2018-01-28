@@ -16,19 +16,12 @@
   specific language governing permissions and limitations
   under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.apache.hivemall</groupId>
+	<groupId>io.github.myui</groupId>
 	<artifactId>hivemall</artifactId>
-	<version>0.5.0-incubating-SNAPSHOT</version>
-
-	<parent>
-	  <groupId>org.apache</groupId>
-	  <artifactId>apache</artifactId>
-	  <version>18</version>
-	</parent>
+	<version>0.4.2-rc.2</version>
 
 	<name>Apache Hivemall</name>
 	<description>Scalable Machine Learning Library for Apache Hive, Apache Spark, and Apache Pig</description>
@@ -42,7 +35,7 @@
 	<licenses>
 		<license>
 			<name>Apache License, Version 2.0</name>
-			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<url>http://opensource.org/licenses/Apache-2.0</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -152,8 +145,8 @@
 			<name>Tsuyoshi Ozawa</name>
 			<email>ozawa[at]apache.org</email>
 			<url>https://people.apache.org/~ozawa/</url>
-			<organization></organization>
-			<organizationUrl></organizationUrl>
+			<organization>Nippon Telegraph and Telephone Corporation (NTT)</organization>
+			<organizationUrl>http://www.ntt.co.jp/</organizationUrl>
 			<roles>
 				<role>PPMC Member</role>
 			</roles>
@@ -167,7 +160,7 @@
 			<organization>Treasure Data, Inc.</organization>
 			<organizationUrl>https://www.treasuredata.com/</organizationUrl>
 			<roles>
-				<role>PPMC Member</role>
+				<role>Committer</role>
 			</roles>
 			<timezone>+9</timezone>
 		</developer>
@@ -178,18 +171,6 @@
 			<url>https://github.com/amaya382</url>
 			<organization>Osaka University</organization>
 			<organizationUrl>http://www.osaka-u.ac.jp/</organizationUrl>
-			<roles>
-				<role>Committer</role>
-			</roles>
-			<timezone>+9</timezone>
-		</developer>
-		<developer>
-			<id>nzw</id>
-			<name>Kento Nozawa</name>
-			<email>nzw[at]apache.org</email>
-			<url>http://nzw0301.github.io/</url>
-			<organization>Tsukuba University</organization>
-			<organizationUrl>http://www.tsukuba.ac.jp/</organizationUrl>
 			<roles>
 				<role>Committer</role>
 			</roles>
@@ -242,6 +223,13 @@
 		</developer>
 	</developers>
 
+	<!--
+	<contributors>
+		<contributor>
+		</contributor>
+	</contributors>
+	-->
+
 	<packaging>pom</packaging>
 
 	<modules>
@@ -254,14 +242,11 @@
 	<properties>
 		<java.source.version>1.7</java.source.version>
 		<java.target.version>1.7</java.target.version>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
 		<scala.version>2.11.8</scala.version>
 		<scala.binary.version>2.11</scala.binary.version>
 		<maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
 		<build.year>${maven.build.timestamp}</build.year>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<protobuf.version>2.5.0</protobuf.version>
 		<protoc.path>${env.PROTOC_PATH}</protoc.path>
 		<hadoop.version>2.4.0</hadoop.version>
@@ -270,94 +255,20 @@
 		<junit.version>4.12</junit.version>
 		<dependency.locations.enabled>false</dependency.locations.enabled>
 		<main.basedir>${project.basedir}</main.basedir>
-		<maven-enforcer-plugin.version>3.0.0-M1</maven-enforcer-plugin.version>
-		<surefire.version>2.19.1</surefire.version>
-	</properties>
+	<gib.commitRange>${env.TRAVIS_COMMIT_RANGE}</gib.commitRange>
+        <gib.enabled>true</gib.enabled>
+        <gib.useEkstazi>true</gib.useEkstazi>
+        <gib.excludePathRegex>(.*\.apt$)|(.*\.txt$)|(.*\.md$)|(.*\.html$)|(.*\.rst$)|(.*\.scss$)|(.*\.css$)|(.*\.png$)|(.*\.py$)|(.*README$)|(.*\.jpg$)|(.*\.jpeg$)|(.*NOTICE$)|(.*\.gitignore$)</gib.excludePathRegex>
+    </properties>
 
 	<distributionManagement>
-		<repository>
-			<id>apache.releases.https</id>
-			<name>Apache Release Distribution Repository</name>
-			<url>https://repository.apache.org/service/local/staging/deploy/maven2</url>
-		</repository>
-		<snapshotRepository>
-			<id>apache.snapshots.https</id>
-			<name>Apache Development Snapshot Repository</name>
-			<url>https://repository.apache.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<!--
 		<snapshotRepository>
 			<id>ossrh</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
-		-->
 	</distributionManagement>
 
-	<repositories>
-		<repository>
-			<id>apache.snapshots</id>
-			<name>Apache Snapshot Repository</name>
-			<url>https://repository.apache.org/snapshots</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
-
-	<issueManagement>
-		<url>https://issues.apache.org/jira/browse/HIVEMALL/</url>
-		<system>JIRA</system>
-	</issueManagement>
-	<ciManagement>
-		<system>Travis CI</system>
-		<url>https://travis-ci.org/apache/incubator-hivemall</url>
-	</ciManagement>
-
 	<profiles>
-		<profile>
-			<id>spark-2.2</id>
-			<modules>
-				<module>spark/spark-2.2</module>
-				<module>spark/spark-common</module>
-			</modules>
-			<properties>
-				<spark.version>2.2.0</spark.version>
-				<spark.binary.version>2.2</spark.binary.version>
-			</properties>
-			<build>
-				<plugins>
-					<!-- Spark-2.2 only supports Java 8 -->
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-enforcer-plugin</artifactId>
-						<version>${maven-enforcer-plugin.version}</version>
-						<executions>
-							<execution>
-								<id>enforce-versions</id>
-								<phase>validate</phase>
-								<goals>
-									<goal>enforce</goal>
-								</goals>
-								<configuration>
-									<rules>
-										<requireProperty>
-											<property>java.source.version</property>
-											<regex>1.8</regex>
-											<regexMessage>When -Pspark-2.2 set, java.source.version must be 1.8</regexMessage>
-										</requireProperty>
-										<requireProperty>
-											<property>java.target.version</property>
-											<regex>1.8</regex>
-											<regexMessage>When -Pspark-2.2 set, java.target.version must be 1.8</regexMessage>
-										</requireProperty>
-									</rules>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
 		<profile>
 			<id>spark-2.1</id>
 			<modules>
@@ -379,24 +290,6 @@
 				<spark.version>2.0.2</spark.version>
 				<spark.binary.version>2.0</spark.binary.version>
 			</properties>
-		</profile>
-		<profile>
-			<id>java7</id>
-			<properties>
-				<spark.test.jvm.opts>-ea -Xms768m -Xmx1024m -XX:PermSize=128m -XX:MaxPermSize=512m -XX:ReservedCodeCacheSize=512m</spark.test.jvm.opts>
-			</properties>
-			<activation>
-				<jdk>[,1.8)</jdk> <!-- version < 1.8 -->
-			</activation>
-		</profile>
-		<profile>
-			<id>java8</id>
-			<properties>
-				<spark.test.jvm.opts>-ea -Xms768m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m -XX:ReservedCodeCacheSize=512m</spark.test.jvm.opts>
-			</properties>
-			<activation>
-				<jdk>[1.8,)</jdk> <!-- version >= 1.8 -->
-			</activation>
 		</profile>
 		<profile>
 			<id>compile-xgboost</id>
@@ -430,6 +323,73 @@
 				<javadoc.opts>-Xdoclint:none</javadoc.opts>
 			</properties>
 		</profile>
+		<!-- start maven central -->
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<!-- sources.jar -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<!-- javadoc.jar -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<configuration>
+							<locale>en_US</locale>
+							<docencoding>UTF-8</docencoding>
+							<show>protected</show>
+							<linksource>true</linksource>
+						</configuration>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<!-- workaround for Java 8 -->
+									<!-- see http://stackoverflow.com/questions/15886209/maven-is-not-working-in-java-8-when-javadoc-tags-are-incomplete -->
+									<additionalparam>${javadoc.opts}</additionalparam>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<!-- gpg sign -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<!-- end maven central -->
 	</profiles>
 
 	<build>
@@ -441,7 +401,7 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
-					<!-- mvn formatter:format -->
+				    <!-- mvn formatter:format -->
 					<groupId>net.revelc.code</groupId>
 					<artifactId>formatter-maven-plugin</artifactId>
 					<version>0.5.2</version>
@@ -452,7 +412,7 @@
 					</configuration>
 				</plugin>
 				<plugin>
-					<!-- mvn license:check; mvn license:format -->
+				    <!-- mvn license:check; mvn license:format -->
 					<groupId>com.mycila</groupId>
 					<artifactId>license-maven-plugin</artifactId>
 					<version>3.0</version>
@@ -492,116 +452,24 @@
 						</execution>
 					</executions>
 				</plugin>
-				<!-- mvn apache-rat:check -->
-				<plugin>
-					<groupId>org.apache.rat</groupId>
-					<artifactId>apache-rat-plugin</artifactId>
-					<version>0.12</version>
-				</plugin>
-				<!-- javadoc.jar -->
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<configuration>
-						<locale>en_US</locale>
-						<docencoding>UTF-8</docencoding>
-						<show>protected</show>
-						<linksource>true</linksource>
-					</configuration>
-					<executions>
-						<execution>
-							<id>attach-javadocs</id>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-							<configuration>
-								<!-- workaround for Java 8 -->
-								<!-- see http://stackoverflow.com/questions/15886209/maven-is-not-working-in-java-8-when-javadoc-tags-are-incomplete -->
-								<additionalparam>${javadoc.opts}</additionalparam>
-							</configuration>
-						</execution>
-					</executions>
-				</plugin>
-				<!-- Disable git push during mvn release:prepare -->
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-release-plugin</artifactId>
-					<configuration>
-						<goals>deploy</goals>
-						<pushChanges>false</pushChanges>
-						<localCheckout>true</localCheckout>
-					</configuration>
-				</plugin>
-				<!-- Copy LICENSE/NOTICE/DISCLAIMER to jar -->
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-remote-resources-plugin</artifactId>
-					<configuration>
-						<skip>true</skip>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-resources-plugin</artifactId>
-					<executions>
-						<execution>
-						<id>copy-resources</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.basedir}/target/classes/META-INF</outputDirectory>
-							<resources>
-								<resource>
-								<directory>${main.basedir}/</directory>
-								<includes>
-									<include>LICENSE</include>
-									<include>NOTICE</include>
-									<include>DISCLAIMER</include>
-								</includes>
-								</resource>
-							</resources>
-						</configuration>
-						</execution>
-					</executions>
-				</plugin>
 			</plugins>
 		</pluginManagement>
 
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>enforce-maven</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireMavenVersion>
-									<version>[3.3.1,)</version>
-								</requireMavenVersion>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<!-- mvn formatter:format -->
 				<groupId>net.revelc.code</groupId>
 				<artifactId>formatter-maven-plugin</artifactId>
 			</plugin>
 			<plugin>
-				<!-- mvn license:check; mvn license:format -->
+			    <!-- mvn license:check; mvn license:format -->
 				<groupId>com.mycila</groupId>
 				<artifactId>license-maven-plugin</artifactId>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.17</version>
 				<configuration>
 					<skipTests>${skipTests}</skipTests>
 				</configuration>
@@ -609,6 +477,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
 				<configuration>
 					<source>${java.source.version}</source>
 					<target>${java.target.version}</target>
@@ -620,6 +489,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.14.1</version>
 				<configuration>
 					<enableAssertions>true</enableAssertions>
 					<forkCount>1</forkCount>
@@ -640,45 +510,42 @@
 			<plugin>
 				<groupId>org.eluder.coveralls</groupId>
 				<artifactId>coveralls-maven-plugin</artifactId>
-				<version>4.3.0</version>
+				<version>3.0.1</version>
 				<configuration>
 					<repoToken>UhHBKJx1qjSDccp9RmlRXhXUoRrdAr150</repoToken>
 				</configuration>
 			</plugin>
-			<!-- 
-			  Cobertura does not support Java 8 yet
-			  https://github.com/cobertura/cobertura/issues/166
-			-->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>2.7</version>
+				<version>2.6</version>
 				<configuration>
 					<format>xml</format>
 					<maxmem>256m</maxmem>
+					<!-- aggregated reports for multi-module projects -->
 					<aggregate>true</aggregate>
 				</configuration>
 			</plugin>
-			<!--
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.7.6.201602180812</version>
-				<executions>
-					<execution>
-						<id>prepare-agent</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			-->
 			<!-- end overalls -->
+			<!-- start sonatype deploy -->
+			<!-- mvn clean deploy -DperformRelease=true -Dskiptests=true -Dmaven.test.skip=true -->
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.3</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
+			<!-- end sonatype deploy -->
 			<!-- start mvn site -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
+				<version>3.5.1</version>
 				<dependencies>
 					<dependency>
 						<groupId>org.apache.maven.doxia</groupId>
@@ -712,30 +579,43 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- mvn apache-rat:check -->
-			<plugin>
-				<groupId>org.apache.rat</groupId>
-				<artifactId>apache-rat-plugin</artifactId>
-				<configuration>
-					<excludesFile>.rat-excludes</excludesFile>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>verify</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+		</plugins>
+	<extensions>
+            <extension>
+                <groupId>edu.illinois</groupId>
+                <artifactId>incremental-builder-with-ekstazi</artifactId>
+                <version>3.5.0</version>
+            </extension>
+        </extensions>
+    </build>
+
+    <!-- 
+	<reporting>
+		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<configuration>
-					<tagNameFormat>v@{project.version}</tagNameFormat>
-				</configuration>
+				<artifactId>maven-changes-plugin</artifactId>
+				<version>2.12</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>changes-report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
 			</plugin>
 		</plugins>
-	</build>
+	</reporting>
+    -->
+
+	<issueManagement>
+		<url>https://issues.apache.org/jira/browse/HIVEMALL/</url>
+		<system>JIRA</system>
+	</issueManagement>
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/apache/incubator-hivemall</url>
+	</ciManagement>
 
 </project>
+

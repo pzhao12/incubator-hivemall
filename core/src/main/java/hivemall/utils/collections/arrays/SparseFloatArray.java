@@ -18,7 +18,6 @@
  */
 package hivemall.utils.collections.arrays;
 
-import hivemall.math.vector.VectorProcedure;
 import hivemall.utils.lang.ArrayUtils;
 import hivemall.utils.lang.Preconditions;
 
@@ -183,14 +182,6 @@ public final class SparseFloatArray implements FloatArray {
             array[k] = v;
         }
         return array;
-    }
-
-    public void each(@Nonnull final VectorProcedure procedure) {
-        for (int i = 0; i < mSize; i++) {
-            int k = mKeys[i];
-            float v = mValues[i];
-            procedure.apply(k, v);
-        }
     }
 
     @Override

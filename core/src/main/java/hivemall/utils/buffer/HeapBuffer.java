@@ -20,6 +20,7 @@ package hivemall.utils.buffer;
 
 import hivemall.utils.lang.NumberUtils;
 import hivemall.utils.lang.Preconditions;
+import hivemall.utils.lang.Primitives;
 import hivemall.utils.lang.SizeOf;
 import hivemall.utils.lang.UnsafeUtils;
 
@@ -96,8 +97,8 @@ public final class HeapBuffer {
         Preconditions.checkArgument(bytes <= _chunkBytes,
             "Cannot allocate memory greater than %s bytes: %s", _chunkBytes, bytes);
 
-        int i = NumberUtils.castToInt(_position / _chunkBytes);
-        final int j = NumberUtils.castToInt(_position % _chunkBytes);
+        int i = Primitives.castToInt(_position / _chunkBytes);
+        final int j = Primitives.castToInt(_position % _chunkBytes);
         if (bytes > (_chunkBytes - j)) {
             // cannot allocate the object in the current chunk
             // so, skip the current chunk
@@ -143,7 +144,7 @@ public final class HeapBuffer {
 
     public byte getByte(final long ptr) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         return _UNSAFE.getByte(chunk, j);
@@ -151,7 +152,7 @@ public final class HeapBuffer {
 
     public void putByte(final long ptr, final byte value) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         _UNSAFE.putByte(chunk, j, value);
@@ -159,7 +160,7 @@ public final class HeapBuffer {
 
     public int getInt(final long ptr) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         return _UNSAFE.getInt(chunk, j);
@@ -167,7 +168,7 @@ public final class HeapBuffer {
 
     public void putInt(final long ptr, final int value) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         _UNSAFE.putInt(chunk, j, value);
@@ -175,7 +176,7 @@ public final class HeapBuffer {
 
     public short getShort(final long ptr) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         return _UNSAFE.getShort(chunk, j);
@@ -183,7 +184,7 @@ public final class HeapBuffer {
 
     public void putShort(final long ptr, final short value) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         _UNSAFE.putShort(chunk, j, value);
@@ -191,7 +192,7 @@ public final class HeapBuffer {
 
     public char getChar(final long ptr) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         return _UNSAFE.getChar(chunk, j);
@@ -199,14 +200,14 @@ public final class HeapBuffer {
 
     public void putChar(final long ptr, final char value) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         _UNSAFE.putChar(chunk, j, value);
     }
 
     public long getLong(final long ptr) {
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         return _UNSAFE.getLong(chunk, j);
@@ -214,7 +215,7 @@ public final class HeapBuffer {
 
     public void putLong(final long ptr, final long value) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         _UNSAFE.putLong(chunk, j, value);
@@ -222,7 +223,7 @@ public final class HeapBuffer {
 
     public float getFloat(final long ptr) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         return _UNSAFE.getFloat(chunk, j);
@@ -230,7 +231,7 @@ public final class HeapBuffer {
 
     public void putFloat(final long ptr, final float value) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         _UNSAFE.putFloat(chunk, j, value);
@@ -238,7 +239,7 @@ public final class HeapBuffer {
 
     public double getDouble(final long ptr) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         return _UNSAFE.getDouble(chunk, j);
@@ -246,7 +247,7 @@ public final class HeapBuffer {
 
     public void putDouble(final long ptr, final double value) {
         validatePointer(ptr);
-        int i = NumberUtils.castToInt(ptr / _chunkBytes);
+        int i = Primitives.castToInt(ptr / _chunkBytes);
         int[] chunk = _chunks[i];
         long j = offset(ptr);
         _UNSAFE.putDouble(chunk, j, value);
@@ -259,7 +260,7 @@ public final class HeapBuffer {
             throw new IllegalArgumentException("Cannot put empty array at " + ptr);
         }
 
-        int chunkIdx = NumberUtils.castToInt(ptr / _chunkBytes);
+        int chunkIdx = Primitives.castToInt(ptr / _chunkBytes);
         final int[] chunk = _chunks[chunkIdx];
         final long base = offset(ptr);
         for (int i = 0; i < len; i++) {
@@ -276,7 +277,7 @@ public final class HeapBuffer {
             throw new IllegalArgumentException("Cannot put empty array at " + ptr);
         }
 
-        int chunkIdx = NumberUtils.castToInt(ptr / _chunkBytes);
+        int chunkIdx = Primitives.castToInt(ptr / _chunkBytes);
         final int[] chunk = _chunks[chunkIdx];
         final long base = offset(ptr);
         for (int i = 0; i < len; i++) {

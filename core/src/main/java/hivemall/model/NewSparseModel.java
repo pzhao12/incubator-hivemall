@@ -23,7 +23,7 @@ import hivemall.model.WeightValueWithClock.WeightValueParamsF2Clock;
 import hivemall.model.WeightValueWithClock.WeightValueParamsF3Clock;
 import hivemall.model.WeightValueWithClock.WeightValueWithCovarClock;
 import hivemall.utils.collections.IMapIterator;
-import hivemall.utils.collections.maps.OpenHashTable;
+import hivemall.utils.collections.maps.OpenHashMap;
 
 import javax.annotation.Nonnull;
 
@@ -34,7 +34,7 @@ public final class NewSparseModel extends AbstractPredictionModel {
     private static final Log logger = LogFactory.getLog(NewSparseModel.class);
 
     @Nonnull
-    private final OpenHashTable<Object, IWeightValue> weights;
+    private final OpenHashMap<Object, IWeightValue> weights;
     private final boolean hasCovar;
     private boolean clockEnabled;
 
@@ -44,7 +44,7 @@ public final class NewSparseModel extends AbstractPredictionModel {
 
     public NewSparseModel(int size, boolean hasCovar) {
         super();
-        this.weights = new OpenHashTable<Object, IWeightValue>(size);
+        this.weights = new OpenHashMap<Object, IWeightValue>(size);
         this.hasCovar = hasCovar;
         this.clockEnabled = false;
     }
@@ -194,7 +194,7 @@ public final class NewSparseModel extends AbstractPredictionModel {
     @SuppressWarnings("unchecked")
     @Override
     public <K, V extends IWeightValue> IMapIterator<K, V> entries() {
-        return (IMapIterator<K, V>) weights.entries(true);
+        return (IMapIterator<K, V>) weights.entries();
     }
 
 }

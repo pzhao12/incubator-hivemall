@@ -16,6 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+//
+// Licensed to the Apache Software Foundation (ASF) under one or more
+// contributor license agreements.  See the NOTICE file distributed with
+// this work for additional information regarding copyright ownership.
+// The ASF licenses this file to You under the Apache License, Version 2.0
+// (the "License"); you may not use this file except in compliance with
+// the License.  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 package hivemall.utils.math;
 
 import java.util.Random;
@@ -27,7 +43,6 @@ import javax.annotation.Nullable;
 import org.apache.commons.math3.special.Gamma;
 
 public final class MathUtils {
-    public static final double LOG2 = Math.log(2);
 
     private MathUtils() {}
 
@@ -231,10 +246,6 @@ public final class MathUtils {
         return Math.log(n) / Math.log(base);
     }
 
-    public static double log2(final double n) {
-        return Math.log(n) / LOG2;
-    }
-
     public static int floorDiv(final int x, final int y) {
         int r = x / y;
         // if the signs are different and modulo not zero, round down
@@ -253,7 +264,7 @@ public final class MathUtils {
         return r;
     }
 
-    public static boolean equals(final float value, final float expected, final float delta) {
+    public static boolean equals(@Nonnull final float value, final float expected, final float delta) {
         if (Double.isNaN(value)) {
             return false;
         }
@@ -263,7 +274,8 @@ public final class MathUtils {
         return true;
     }
 
-    public static boolean equals(final double value, final double expected, final double delta) {
+    public static boolean equals(@Nonnull final double value, final double expected,
+            final double delta) {
         if (Double.isNaN(value)) {
             return false;
         }
@@ -273,34 +285,26 @@ public final class MathUtils {
         return true;
     }
 
-    public static boolean almostEquals(final float value, final float expected) {
+    public static boolean almostEquals(@Nonnull final float value, final float expected) {
         return equals(value, expected, 1E-15f);
     }
 
-    public static boolean almostEquals(final double value, final double expected) {
+    public static boolean almostEquals(@Nonnull final double value, final double expected) {
         return equals(value, expected, 1E-15d);
     }
 
-    public static boolean closeToZero(final float value) {
-        return closeToZero(value, 1E-15f);
-    }
-
-    public static boolean closeToZero(final float value, @Nonnegative final float tol) {
-        if (value == 0.f) {
-            return true;
+    public static boolean closeToZero(@Nonnull final float value) {
+        if (Math.abs(value) > 1E-15f) {
+            return false;
         }
-        return Math.abs(value) <= tol;
+        return true;
     }
 
-    public static boolean closeToZero(final double value) {
-        return closeToZero(value, 1E-15d);
-    }
-
-    public static boolean closeToZero(final double value, @Nonnegative final double tol) {
-        if (value == 0.d) {
-            return true;
+    public static boolean closeToZero(@Nonnull final double value) {
+        if (Math.abs(value) > 1E-15d) {
+            return false;
         }
-        return Math.abs(value) <= tol;
+        return true;
     }
 
     public static double sign(final double x) {
@@ -418,10 +422,8 @@ public final class MathUtils {
         if (sum == 0.d) {
             return new float[size];
         }
-        // floating point multiplication is faster than division
-        final double multiplier = 1.d / sum;
         for (int i = 0; i < size; i++) {
-            arr[i] *= multiplier;
+            arr[i] /= sum;
         }
         return arr;
     }

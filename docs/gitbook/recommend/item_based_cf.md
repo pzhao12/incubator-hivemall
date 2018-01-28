@@ -325,7 +325,7 @@ similarity as (
     o.other,
     cosine_similarity(t1.feature_vector, t2.feature_vector) as similarity
   from
-    cooccurrence_top100 o
+    cooccurrence_top100 o　
     -- cooccurrence_upper_triangular o
     JOIN item_features t1 ON (o.itemid = t1.itemid)
     JOIN item_features t2 ON (o.other = t2.itemid)
@@ -436,11 +436,6 @@ from (
 ## Step 2: Recommend top-k items based on users' recently purchased items
 
 In order to generate a list of recommended items, you can use either cooccurrence count or similarity as a relevance score.
-
-> #### Caution
-> In order to obtain ranked list of items, this section introduces queries using `map_values(to_ordered_map(rank, rec_item))`. However, this kind of usage has a potential issue that multiple `rec_item`-s which have the exactly same `rank` will be aggregated to single arbitrary `rec_item`, because `to_ordered_map()` creates a key-value map which uses duplicated `rank` as key.
->
-> Since such situation is possible in case that `each_top_k()` is executed for different `userid`-s who have the same `cnt` or `similarity`, we recommend you to use `to_ordered_list(rec_item, rank, '-reverse')` instead of `map_values(to_ordered_map(rank, rec_item, true))`. The alternative approach is available from Hivemall v0.5-rc.1 or later.
 
 ### Cooccurrence-based
 
@@ -652,8 +647,7 @@ partial_result as ( -- launch DIMSUM in a MapReduce fashion
     item_features f
   left outer join item_magnitude m
 ),
-similarity as (
-  -- reduce (i.e., sum up) mappers' partial results
+similarity as ( -- reduce (i.e., sum up) mappers' partial results
   select
     itemid, 
     other,
@@ -703,8 +697,7 @@ partial_result as (
     item_features f
   left outer join item_magnitude m
 ),
-similarity_upper_triangular as (
-  -- if similarity of (i1, i2) pair is in this table, (i2, i1)'s similarity is omitted
+similarity_upper_triangular as ( -- if similarity of (i1, i2) pair is in this table, (i2, i1)'s similarity is omitted
   select
     itemid, 
     other,

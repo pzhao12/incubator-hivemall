@@ -19,9 +19,8 @@
 package hivemall.ftvec.ranking;
 
 import hivemall.utils.collections.lists.IntArrayList;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntIterator;
+import hivemall.utils.collections.maps.IntOpenHashMap;
+import hivemall.utils.collections.maps.IntOpenHashMap.IMapIterator;
 
 import java.util.BitSet;
 
@@ -31,13 +30,13 @@ import javax.annotation.Nullable;
 public class PositiveOnlyFeedback {
 
     @Nonnull
-    protected final Int2ObjectMap<IntArrayList> rows;
+    protected final IntOpenHashMap<IntArrayList> rows;
 
     protected int maxItemId;
     protected int totalFeedbacks;
 
     public PositiveOnlyFeedback(int maxItemId) {
-        this.rows = new Int2ObjectOpenHashMap<IntArrayList>(1024);
+        this.rows = new IntOpenHashMap<IntArrayList>(1024);
         this.maxItemId = maxItemId;
         this.totalFeedbacks = 0;
     }
@@ -62,19 +61,21 @@ public class PositiveOnlyFeedback {
     public int[] getUsers() {
         final int size = rows.size();
         final int[] keys = new int[size];
-        final IntIterator itor = rows.keySet().iterator();
+        final IMapIterator<IntArrayList> itor = rows.entries();
         for (int i = 0; i < size; i++) {
-            if (!itor.hasNext()) {
+            if (itor.next() == -1) {
                 throw new IllegalStateException();
             }
-            int key = itor.nextInt();
+            int key = itor.getKey();
             keys[i] = key;
         }
         return keys;
     }
 
     public void getUsers(@Nonnull final BitSet bitset) {
-        for (int key : rows.keySet()) {
+        final IMapIterator<IntArrayList> itor = rows.entries();
+        while (itor.next() != -1) {
+            int key = itor.getKey();
             bitset.set(key);
         }
     }

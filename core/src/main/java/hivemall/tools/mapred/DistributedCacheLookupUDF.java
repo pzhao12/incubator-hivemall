@@ -19,11 +19,10 @@
 package hivemall.tools.mapred;
 
 import hivemall.ftvec.ExtractFeatureUDF;
+import hivemall.utils.collections.maps.OpenHashMap;
 import hivemall.utils.hadoop.HadoopUtils;
 import hivemall.utils.hadoop.HiveUtils;
 import hivemall.utils.io.IOUtils;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -67,7 +66,7 @@ public final class DistributedCacheLookupUDF extends GenericUDF {
     private ListObjectInspector keysInputOI;
     private ListObjectInspector valuesInputOI;
 
-    private Object2ObjectMap<Object, Object> cache;
+    private OpenHashMap<Object, Object> cache;
 
     @Override
     public ObjectInspector initialize(ObjectInspector[] argOIs) throws UDFArgumentException {
@@ -126,8 +125,7 @@ public final class DistributedCacheLookupUDF extends GenericUDF {
                 "parseKey=true is only available for string typed key(s)");
         }
 
-        final Object2ObjectMap<Object, Object> map = new Object2ObjectOpenHashMap<Object, Object>(
-            8192);
+        final OpenHashMap<Object, Object> map = new OpenHashMap<Object, Object>(8192);
         try {
             loadValues(map, new File(filepath), keyInputOI, valueInputOI);
             this.cache = map;
@@ -140,7 +138,7 @@ public final class DistributedCacheLookupUDF extends GenericUDF {
         return outputOI;
     }
 
-    private static void loadValues(Object2ObjectMap<Object, Object> map, File file,
+    private static void loadValues(OpenHashMap<Object, Object> map, File file,
             PrimitiveObjectInspector keyOI, PrimitiveObjectInspector valueOI) throws IOException,
             SerDeException {
         if (!file.exists()) {

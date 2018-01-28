@@ -305,14 +305,14 @@ public final class SmileExtUtils {
             }
             return x;
         } else {
-            final int[] indices = MathUtils.permutation(numRows);
+            final int[] indicies = MathUtils.permutation(numRows);
             for (int i = numRows; i > 1; i--) {
                 int j = rnd.nextInt(i);
                 int k = i - 1;
-                swap(indices, k, j);
+                swap(indicies, k, j);
                 swap(y, k, j);
             }
-            return MatrixUtils.shuffle(x, indices);
+            return MatrixUtils.shuffle(x, indicies);
         }
     }
 
@@ -338,14 +338,14 @@ public final class SmileExtUtils {
             }
             return x;
         } else {
-            final int[] indices = MathUtils.permutation(numRows);
+            final int[] indicies = MathUtils.permutation(numRows);
             for (int i = numRows; i > 1; i--) {
                 int j = rnd.nextInt(i);
                 int k = i - 1;
-                swap(indices, k, j);
+                swap(indicies, k, j);
                 swap(y, k, j);
             }
-            return MatrixUtils.shuffle(x, indices);
+            return MatrixUtils.shuffle(x, indicies);
         }
     }
 

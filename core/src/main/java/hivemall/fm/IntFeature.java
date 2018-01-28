@@ -18,25 +18,21 @@
  */
 package hivemall.fm;
 
-import hivemall.utils.lang.SizeOf;
-
 import java.nio.ByteBuffer;
 
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 
 public final class IntFeature extends Feature {
 
-    @Nonnegative
     private int index;
     /** -1 if not defined */
     private short field;
 
-    public IntFeature(@Nonnegative int index, double value) {
+    public IntFeature(int index, double value) {
         this(index, (short) -1, value);
     }
 
-    public IntFeature(@Nonnegative int index, short field, double value) {
+    public IntFeature(int index, short field, double value) {
         super(value);
         this.field = field;
         this.index = index;
@@ -74,7 +70,7 @@ public final class IntFeature extends Feature {
 
     @Override
     public int bytes() {
-        return SizeOf.INT + SizeOf.SHORT + SizeOf.DOUBLE;
+        return (Integer.SIZE + Short.SIZE + Double.SIZE) / Byte.SIZE;
     }
 
     @Override
@@ -96,7 +92,7 @@ public final class IntFeature extends Feature {
         if (field == -1) {
             return index + ":" + value;
         } else {
-            return field + ":" + index + ":" + value;
+            return index + ":" + field + ":" + value;
         }
     }
 

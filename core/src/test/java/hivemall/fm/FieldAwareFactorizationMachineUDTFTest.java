@@ -18,19 +18,16 @@
  */
 package hivemall.fm;
 
-import hivemall.utils.lang.NumberUtils;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
@@ -45,116 +42,38 @@ public class FieldAwareFactorizationMachineUDTFTest {
     private static final int ITERATIONS = 50;
     private static final int MAX_LINES = 200;
 
-    // ----------------------------------------------------
-    // bigdata.tr.txt
-
     @Test
     public void testSGD() throws HiveException, IOException {
-        runIterations("Pure SGD test", "bigdata.tr.txt.gz",
-            "-opt sgd -classification -factors 10 -w0 -seed 43", 0.60f);
+        runTest("Pure SGD test",
+            "-classification -factors 10 -w0 -seed 43 -disable_adagrad -disable_ftrl", 0.60f);
     }
 
     @Test
-    public void testAdaGrad() throws HiveException, IOException {
-        runIterations("AdaGrad test", "bigdata.tr.txt.gz",
-            "-opt adagrad -classification -factors 10 -w0 -seed 43", 0.30f);
+    public void testSGDWithFTRL() throws HiveException, IOException {
+        runTest("SGD w/ FTRL test", "-classification -factors 10 -w0 -seed 43 -disable_adagrad",
+            0.60f);
     }
 
     @Test
     public void testAdaGradNoCoeff() throws HiveException, IOException {
-        runIterations("AdaGrad No Coeff test", "bigdata.tr.txt.gz",
-            "-opt adagrad -no_coeff -classification -factors 10 -w0 -seed 43", 0.30f);
+        runTest("AdaGrad No Coeff test", "-classification -factors 10 -w0 -seed 43 -no_coeff",
+            0.30f);
     }
 
     @Test
-    public void testFTRL() throws HiveException, IOException {
-        runIterations("FTRL test", "bigdata.tr.txt.gz",
-            "-opt ftrl -classification -factors 10 -w0 -seed 43", 0.30f);
+    public void testAdaGradNoFTRL() throws HiveException, IOException {
+        runTest("AdaGrad w/o FTRL test", "-classification -factors 10 -w0 -seed 43 -disable_ftrl",
+            0.30f);
     }
 
     @Test
-    public void testFTRLNoCoeff() throws HiveException, IOException {
-        runIterations("FTRL Coeff test", "bigdata.tr.txt.gz",
-            "-opt ftrl -no_coeff -classification -factors 10 -w0 -seed 43", 0.30f);
+    public void testAdaGradDefault() throws HiveException, IOException {
+        runTest("AdaGrad DEFAULT (adagrad for V + FTRL for W)",
+            "-classification -factors 10 -w0 -seed 43", 0.30f);
     }
 
-    // ----------------------------------------------------
-    // https://github.com/myui/ml_dataset/raw/master/ffm/sample.ffm.gz
-
-    @Test
-    public void testSample() throws IOException, HiveException {
-        run("[Sample.ffm] default option",
-            "https://github.com/myui/ml_dataset/raw/master/ffm/sample.ffm.gz",
-            "-classification -factors 2 -iters 10 -feature_hashing 20 -seed 43", 0.01f);
-    }
-
-    // TODO @Test
-    public void testSampleEnableNorm() throws IOException, HiveException {
-        run("[Sample.ffm] default option",
-            "https://github.com/myui/ml_dataset/raw/master/ffm/sample.ffm.gz",
-            "-classification -factors 2 -iters 10 -feature_hashing 20 -seed 43 -enable_norm", 0.01f);
-    }
-
-    private static void run(String testName, String testFile, String testOptions,
-            float lossThreshold) throws IOException, HiveException {
-        println(testName);
-
-        FieldAwareFactorizationMachineUDTF udtf = new FieldAwareFactorizationMachineUDTF();
-        ObjectInspector[] argOIs = new ObjectInspector[] {
-                ObjectInspectorFactory.getStandardListObjectInspector(PrimitiveObjectInspectorFactory.javaStringObjectInspector),
-                PrimitiveObjectInspectorFactory.javaDoubleObjectInspector,
-                ObjectInspectorUtils.getConstantObjectInspector(
-                    PrimitiveObjectInspectorFactory.javaStringObjectInspector, testOptions)};
-
-        udtf.initialize(argOIs);
-        FieldAwareFactorizationMachineModel model = udtf.initModel(udtf._params);
-        Assert.assertTrue("Actual class: " + model.getClass().getName(),
-            model instanceof FFMStringFeatureMapModel);
-
-        int lines = 0;
-        BufferedReader data = readFile(testFile);
-        while (true) {
-            //gather features in current line
-            final String input = data.readLine();
-            if (input == null) {
-                break;
-            }
-            lines++;
-            String[] featureStrings = input.split(" ");
-
-            double y = Double.parseDouble(featureStrings[0]);
-            if (y == 0) {
-                y = -1;//LibFFM data uses {0, 1}; Hivemall uses {-1, 1}
-            }
-
-            final List<String> features = new ArrayList<String>(featureStrings.length - 1);
-            for (int j = 1; j < featureStrings.length; ++j) {
-                String fj = featureStrings[j];
-                String[] splitted = fj.split(":");
-                Assert.assertEquals(3, splitted.length);
-                String indexStr = splitted[1];
-                String f = fj;
-                if (NumberUtils.isDigits(indexStr)) {
-                    int index = Integer.parseInt(indexStr) + 1; // avoid 0 index
-                    f = splitted[0] + ':' + index + ':' + splitted[2];
-                }
-                features.add(f);
-            }
-
-            udtf.process(new Object[] {features, y});
-        }
-        udtf.finalizeTraining();
-        data.close();
-
-        println("model size=" + udtf._model.getSize());
-
-        double avgLoss = udtf._cvState.getAverageLoss(lines);
-        Assert.assertTrue("Last loss was greater than expected: " + avgLoss,
-            avgLoss < lossThreshold);
-    }
-
-    private static void runIterations(String testName, String testFile, String testOptions,
-            float lossThreshold) throws IOException, HiveException {
+    private static void runTest(String testName, String testOptions, float lossThreshold)
+            throws IOException, HiveException {
         println(testName);
 
         FieldAwareFactorizationMachineUDTF udtf = new FieldAwareFactorizationMachineUDTF();
@@ -172,7 +91,7 @@ public class FieldAwareFactorizationMachineUDTFTest {
         double loss = 0.d;
         double cumul = 0.d;
         for (int trainingIteration = 1; trainingIteration <= ITERATIONS; ++trainingIteration) {
-            BufferedReader data = readFile(testFile);
+            BufferedReader data = readFile("bigdata.tr.txt.gz");
             loss = udtf._cvState.getCumulativeLoss();
             int lines = 0;
             for (int lineNumber = 0; lineNumber < MAX_LINES; ++lineNumber, ++lines) {
@@ -181,27 +100,30 @@ public class FieldAwareFactorizationMachineUDTFTest {
                 if (input == null) {
                     break;
                 }
-                String[] featureStrings = input.split(" ");
+                ArrayList<String> featureStrings = new ArrayList<String>();
+                ArrayList<StringFeature> features = new ArrayList<StringFeature>();
 
-                double y = Double.parseDouble(featureStrings[0]);
+                //make StringFeature for each word = data point
+                String remaining = input;
+                int wordCut = remaining.indexOf(' ');
+                while (wordCut != -1) {
+                    featureStrings.add(remaining.substring(0, wordCut));
+                    remaining = remaining.substring(wordCut + 1);
+                    wordCut = remaining.indexOf(' ');
+                }
+                int end = featureStrings.size();
+                double y = Double.parseDouble(featureStrings.get(0));
                 if (y == 0) {
                     y = -1;//LibFFM data uses {0, 1}; Hivemall uses {-1, 1}
                 }
-
-                final List<String> features = new ArrayList<String>(featureStrings.length - 1);
-                for (int j = 1; j < featureStrings.length; ++j) {
-                    String fj = featureStrings[j];
-                    String[] splitted = fj.split(":");
-                    Assert.assertEquals(3, splitted.length);
-                    String indexStr = splitted[1];
-                    String f = fj;
-                    if (NumberUtils.isDigits(indexStr)) {
-                        int index = Integer.parseInt(indexStr) + 1; // avoid 0 index
-                        f = splitted[0] + ':' + index + ':' + splitted[2];
-                    }
-                    features.add(f);
+                for (int wordNumber = 1; wordNumber < end; ++wordNumber) {
+                    String entireFeature = featureStrings.get(wordNumber);
+                    int featureCut = StringUtils.ordinalIndexOf(entireFeature, ":", 2);
+                    String feature = entireFeature.substring(0, featureCut);
+                    double value = Double.parseDouble(entireFeature.substring(featureCut + 1));
+                    features.add(new StringFeature(feature, value));
                 }
-                udtf.process(new Object[] {features, y});
+                udtf.process(new Object[] {toStringArray(features), y});
             }
             cumul = udtf._cvState.getCumulativeLoss();
             loss = (cumul - loss) / lines;
@@ -214,17 +136,20 @@ public class FieldAwareFactorizationMachineUDTFTest {
 
     @Nonnull
     private static BufferedReader readFile(@Nonnull String fileName) throws IOException {
-        InputStream is;
-        if (fileName.startsWith("http")) {
-            URL url = new URL(fileName);
-            is = url.openStream();
-        } else {
-            is = FieldAwareFactorizationMachineUDTFTest.class.getResourceAsStream(fileName);
-        }
+        InputStream is = FieldAwareFactorizationMachineUDTFTest.class.getResourceAsStream(fileName);
         if (fileName.endsWith(".gz")) {
             is = new GZIPInputStream(is);
         }
         return new BufferedReader(new InputStreamReader(is));
+    }
+
+    private static String[] toStringArray(ArrayList<StringFeature> x) {
+        final int size = x.size();
+        final String[] ret = new String[size];
+        for (int i = 0; i < size; i++) {
+            ret[i] = x.get(i).toString();
+        }
+        return ret;
     }
 
     private static void println(String line) {

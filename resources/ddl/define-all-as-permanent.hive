@@ -211,9 +211,6 @@ CREATE FUNCTION rescale as 'hivemall.ftvec.scaling.RescaleUDF' USING JAR '${hive
 DROP FUNCTION IF EXISTS zscore;
 CREATE FUNCTION zscore as 'hivemall.ftvec.scaling.ZScoreUDF' USING JAR '${hivemall_jar}';
 
-DROP FUNCTION IF EXISTS l1_normalize;
-CREATE FUNCTION l1_normalize as 'hivemall.ftvec.scaling.L1NormalizationUDF' USING JAR '${hivemall_jar}';
-
 DROP FUNCTION IF EXISTS l2_normalize;
 CREATE FUNCTION l2_normalize as 'hivemall.ftvec.scaling.L2NormalizationUDF' USING JAR '${hivemall_jar}';
 
@@ -316,13 +313,6 @@ CREATE FUNCTION binarize_label as 'hivemall.ftvec.trans.BinarizeLabelUDTF' USING
 DROP FUNCTION IF EXISTS onehot_encoding;
 CREATE FUNCTION onehot_encoding as 'hivemall.ftvec.trans.OnehotEncodingUDAF' USING JAR '${hivemall_jar}';
 
-DROP FUNCTION IF EXISTS add_field_indices;
-CREATE FUNCTION add_field_indices as 'hivemall.ftvec.trans.AddFieldIndicesUDF' USING JAR '${hivemall_jar}';
-
--- alias for backward compatibility
-DROP FUNCTION IF EXISTS add_field_indicies;
-CREATE FUNCTION add_field_indicies as 'hivemall.ftvec.trans.AddFieldIndicesUDF' USING JAR '${hivemall_jar}';
-
 ------------------------------
 -- ranking helper functions --
 ------------------------------
@@ -347,8 +337,8 @@ CREATE FUNCTION tf as 'hivemall.ftvec.text.TermFrequencyUDAF' USING JAR '${hivem
 -- Regression functions --
 --------------------------
 
-DROP FUNCTION IF EXISTS train_regressor;
-CREATE FUNCTION train_regressor as 'hivemall.regression.GeneralRegressorUDTF' USING JAR '${hivemall_jar}';
+DROP FUNCTION IF EXISTS train_regression;
+CREATE FUNCTION train_regression as 'hivemall.regression.GeneralRegressionUDTF' USING JAR '${hivemall_jar}';
 
 DROP FUNCTION IF EXISTS train_logregr;
 CREATE FUNCTION train_logregr as 'hivemall.regression.LogressUDTF' USING JAR '${hivemall_jar}';
@@ -474,13 +464,6 @@ DROP FUNCTION IF EXISTS to_ordered_map;
 CREATE FUNCTION to_ordered_map as 'hivemall.tools.map.UDAFToOrderedMap' USING JAR '${hivemall_jar}';
 
 ---------------------
--- list functions --
----------------------
-
-DROP FUNCTION IF EXISTS to_ordered_list;
-CREATE FUNCTION to_ordered_list as 'hivemall.tools.list.UDAFToOrderedList' USING JAR '${hivemall_jar}';
-
----------------------
 -- Math functions --
 ---------------------
 
@@ -545,9 +528,6 @@ CREATE FUNCTION tokenize as 'hivemall.tools.text.TokenizeUDF' USING JAR '${hivem
 DROP FUNCTION IF EXISTS is_stopword;
 CREATE FUNCTION is_stopword as 'hivemall.tools.text.StopwordUDF' USING JAR '${hivemall_jar}';
 
-DROP FUNCTION IF EXISTS singularize;
-CREATE FUNCTION singularize as 'hivemall.tools.text.SingularizeUDF' USING JAR '${hivemall_jar}';
-
 DROP FUNCTION IF EXISTS split_words;
 CREATE FUNCTION split_words as 'hivemall.tools.text.SplitWordsUDF' USING JAR '${hivemall_jar}';
 
@@ -559,9 +539,6 @@ CREATE FUNCTION base91 as 'hivemall.tools.text.Base91UDF' USING JAR '${hivemall_
 
 DROP FUNCTION IF EXISTS unbase91;
 CREATE FUNCTION unbase91 as 'hivemall.tools.text.Unbase91UDF' USING JAR '${hivemall_jar}';
-
-DROP FUNCTION IF EXISTS word_ngrams;
-CREATE FUNCTION word_ngrams as 'hivemall.tools.text.WordNgramsUDF' USING JAR '${hivemall_jar}';
 
 ---------------------------------
 -- Dataset generator functions --
@@ -575,10 +552,7 @@ CREATE FUNCTION lr_datagen as 'hivemall.dataset.LogisticRegressionDataGeneratorU
 --------------------------
 
 DROP FUNCTION IF EXISTS f1score;
-CREATE FUNCTION f1score as 'hivemall.evaluation.F1ScoreUDAF' USING JAR '${hivemall_jar}';
-
-DROP FUNCTION IF EXISTS fmeasure;
-CREATE FUNCTION fmeasure as 'hivemall.evaluation.FMeasureUDAF' USING JAR '${hivemall_jar}';
+CREATE FUNCTION f1score as 'hivemall.evaluation.FMeasureUDAF' USING JAR '${hivemall_jar}';
 
 DROP FUNCTION IF EXISTS mae;
 CREATE FUNCTION mae as 'hivemall.evaluation.MeanAbsoluteErrorUDAF' USING JAR '${hivemall_jar}';
@@ -595,14 +569,11 @@ CREATE FUNCTION r2 as 'hivemall.evaluation.R2UDAF' USING JAR '${hivemall_jar}';
 DROP FUNCTION IF EXISTS ndcg;
 CREATE FUNCTION ndcg as 'hivemall.evaluation.NDCGUDAF' USING JAR '${hivemall_jar}';
 
-DROP FUNCTION IF EXISTS precision_at;
-CREATE FUNCTION precision_at as 'hivemall.evaluation.PrecisionUDAF' USING JAR '${hivemall_jar}';
+DROP FUNCTION IF EXISTS precision;
+CREATE FUNCTION precision as 'hivemall.evaluation.PrecisionUDAF' USING JAR '${hivemall_jar}';
 
-DROP FUNCTION IF EXISTS recall_at;
-CREATE FUNCTION recall_at as 'hivemall.evaluation.RecallUDAF' USING JAR '${hivemall_jar}';
-
-DROP FUNCTION IF EXISTS hitrate;
-CREATE FUNCTION hitrate as 'hivemall.evaluation.HitRateUDAF' USING JAR '${hivemall_jar}';
+DROP FUNCTION IF EXISTS recall;
+CREATE FUNCTION recall as 'hivemall.evaluation.RecallUDAF' USING JAR '${hivemall_jar}';
 
 DROP FUNCTION IF EXISTS mrr;
 CREATE FUNCTION mrr as 'hivemall.evaluation.MRRUDAF' USING JAR '${hivemall_jar}';
@@ -649,7 +620,7 @@ DROP FUNCTION IF EXISTS train_ffm;
 CREATE FUNCTION train_ffm as 'hivemall.fm.FieldAwareFactorizationMachineUDTF' USING JAR '${hivemall_jar}';
 
 DROP FUNCTION IF EXISTS ffm_predict;
-CREATE FUNCTION ffm_predict as 'hivemall.fm.FFMPredictGenericUDAF' USING JAR '${hivemall_jar}';
+CREATE FUNCTION ffm_predict as 'hivemall.fm.FFMPredictUDF' USING JAR '${hivemall_jar}';
 
 ---------------------------
 -- Anomaly Detection ------
@@ -718,10 +689,6 @@ CREATE FUNCTION train_randomforest_regr as 'hivemall.smile.regression.RandomFore
 DROP FUNCTION IF EXISTS tree_predict;
 CREATE FUNCTION tree_predict as 'hivemall.smile.tools.TreePredictUDF' USING JAR '${hivemall_jar}';
 
--- for backward compatibility
-DROP FUNCTION IF EXISTS tree_predict_v1;
-CREATE FUNCTION tree_predict_v1 as 'hivemall.smile.tools.TreePredictUDFv1' USING JAR '${hivemall_jar}';
-
 DROP FUNCTION IF EXISTS tree_export;
 CREATE FUNCTION tree_export as 'hivemall.smile.tools.TreeExportUDF' USING JAR '${hivemall_jar}';
 
@@ -730,20 +697,6 @@ CREATE FUNCTION rf_ensemble as 'hivemall.smile.tools.RandomForestEnsembleUDAF' U
 
 DROP FUNCTION IF EXISTS guess_attribute_types;
 CREATE FUNCTION guess_attribute_types as 'hivemall.smile.tools.GuessAttributesUDF' USING JAR '${hivemall_jar}';
-
---------------------
--- Recommendation --
---------------------
-
-DROP FUNCTION IF EXISTS train_slim;
-CREATE FUNCTION train_slim as 'hivemall.recommend.SlimUDTF' USING JAR '${hivemall_jar}';
-
------------------
--- Data Sketch --
------------------
-
-DROP FUNCTION IF EXISTS approx_count_distinct;
-CREATE FUNCTION approx_count_distinct as 'hivemall.sketch.hll.ApproxCountDistinctUDAF' USING JAR '${hivemall_jar}';
 
 ------------------------------
 -- XGBoost related features --
@@ -763,3 +716,4 @@ CREATE FUNCTION xgboost_predict AS 'hivemall.xgboost.tools.XGBoostPredictUDTF' U
 
 DROP FUNCTION xgboost_multiclass_predict;
 CREATE FUNCTION xgboost_multiclass_predict AS 'hivemall.xgboost.tools.XGBoostMulticlassPredictUDTF' USING JAR '${hivemall_jar}';
+=======

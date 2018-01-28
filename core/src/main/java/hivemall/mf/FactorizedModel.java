@@ -18,9 +18,8 @@
  */
 package hivemall.mf;
 
+import hivemall.utils.collections.maps.IntOpenHashMap;
 import hivemall.utils.math.MathUtils;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import java.util.Random;
 
@@ -43,10 +42,10 @@ public final class FactorizedModel {
     private int minIndex, maxIndex;
     @Nonnull
     private Rating meanRating;
-    private Int2ObjectMap<Rating[]> users;
-    private Int2ObjectMap<Rating[]> items;
-    private Int2ObjectMap<Rating> userBias;
-    private Int2ObjectMap<Rating> itemBias;
+    private IntOpenHashMap<Rating[]> users;
+    private IntOpenHashMap<Rating[]> items;
+    private IntOpenHashMap<Rating> userBias;
+    private IntOpenHashMap<Rating> itemBias;
 
     private final Random[] randU, randI;
 
@@ -68,10 +67,10 @@ public final class FactorizedModel {
         this.minIndex = 0;
         this.maxIndex = 0;
         this.meanRating = ratingInitializer.newRating(meanRating);
-        this.users = new Int2ObjectOpenHashMap<Rating[]>(expectedSize);
-        this.items = new Int2ObjectOpenHashMap<Rating[]>(expectedSize);
-        this.userBias = new Int2ObjectOpenHashMap<Rating>(expectedSize);
-        this.itemBias = new Int2ObjectOpenHashMap<Rating>(expectedSize);
+        this.users = new IntOpenHashMap<Rating[]>(expectedSize);
+        this.items = new IntOpenHashMap<Rating[]>(expectedSize);
+        this.userBias = new IntOpenHashMap<Rating>(expectedSize);
+        this.itemBias = new IntOpenHashMap<Rating>(expectedSize);
         this.randU = newRandoms(factor, 31L);
         this.randI = newRandoms(factor, 41L);
     }
@@ -106,7 +105,6 @@ public final class FactorizedModel {
 
     }
 
-    @Nonnull
     private static Random[] newRandoms(@Nonnull final int size, final long seed) {
         final Random[] rand = new Random[size];
         for (int i = 0, len = rand.length; i < len; i++) {
@@ -132,17 +130,17 @@ public final class FactorizedModel {
         return meanRating.getWeight();
     }
 
-    public void setMeanRating(final float rating) {
+    public void setMeanRating(float rating) {
         meanRating.setWeight(rating);
     }
 
     @Nullable
-    public Rating[] getUserVector(final int u) {
+    public Rating[] getUserVector(int u) {
         return getUserVector(u, false);
     }
 
     @Nullable
-    public Rating[] getUserVector(final int u, final boolean init) {
+    public Rating[] getUserVector(int u, boolean init) {
         Rating[] v = users.get(u);
         if (init && v == null) {
             v = new Rating[factor];
@@ -166,7 +164,7 @@ public final class FactorizedModel {
     }
 
     @Nullable
-    public Rating[] getItemVector(final int i) {
+    public Rating[] getItemVector(int i) {
         return getItemVector(i, false);
     }
 
@@ -195,7 +193,7 @@ public final class FactorizedModel {
     }
 
     @Nonnull
-    public Rating userBias(final int u) {
+    public Rating userBias(int u) {
         Rating b = userBias.get(u);
         if (b == null) {
             b = ratingInitializer.newRating(0.f); // dummy
@@ -204,15 +202,15 @@ public final class FactorizedModel {
         return b;
     }
 
-    public float getUserBias(final int u) {
-        final Rating b = userBias.get(u);
+    public float getUserBias(int u) {
+        Rating b = userBias.get(u);
         if (b == null) {
             return 0.f;
         }
         return b.getWeight();
     }
 
-    public void setUserBias(final int u, final float value) {
+    public void setUserBias(int u, float value) {
         Rating b = userBias.get(u);
         if (b == null) {
             b = ratingInitializer.newRating(value);
@@ -222,7 +220,7 @@ public final class FactorizedModel {
     }
 
     @Nonnull
-    public Rating itemBias(final int i) {
+    public Rating itemBias(int i) {
         Rating b = itemBias.get(i);
         if (b == null) {
             b = ratingInitializer.newRating(0.f); // dummy
@@ -232,19 +230,19 @@ public final class FactorizedModel {
     }
 
     @Nullable
-    public Rating getItemBiasObject(final int i) {
+    public Rating getItemBiasObject(int i) {
         return itemBias.get(i);
     }
 
-    public float getItemBias(final int i) {
-        final Rating b = itemBias.get(i);
+    public float getItemBias(int i) {
+        Rating b = itemBias.get(i);
         if (b == null) {
             return 0.f;
         }
         return b.getWeight();
     }
 
-    public void setItemBias(final int i, final float value) {
+    public void setItemBias(int i, float value) {
         Rating b = itemBias.get(i);
         if (b == null) {
             b = ratingInitializer.newRating(value);

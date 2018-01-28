@@ -19,8 +19,6 @@
         
 _Caution: Factorization Machine is supported from Hivemall v0.4 or later._
 
-<!-- toc -->
- 
 # Data preparation
 
 First of all, please create `ratings` table described in [this article](../recommend/movielens_dataset.html).
@@ -91,7 +89,7 @@ set hivevar:factor=10;
 set hivevar:iters=50;
 ```
 
-## Build a prediction model by Factorization Machine
+## Build a prediction mdoel by Factorization Machine
 
 ```sql
 drop table fm_model;

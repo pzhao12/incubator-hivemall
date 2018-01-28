@@ -18,8 +18,6 @@
  */
 package hivemall.evaluation;
 
-import static org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory.writableDoubleObjectInspector;
-import static org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory.writableLongObjectInspector;
 import hivemall.utils.hadoop.HiveUtils;
 
 import java.util.ArrayList;
@@ -40,11 +38,11 @@ import org.apache.hadoop.hive.serde2.io.DoubleWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
-import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.WritableDoubleObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.WritableIntObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.io.LongWritable;
@@ -54,6 +52,9 @@ import org.apache.hadoop.io.LongWritable;
         value = "_FUNC_(array rankItems, array correctItems [, const int recommendSize = rankItems.size])"
                 + " - Returns nDCG")
 public final class NDCGUDAF extends AbstractGenericUDAFResolver {
+
+    // prevent instantiation
+    private NDCGUDAF() {}
 
     @Override
     public GenericUDAFEvaluator getEvaluator(@Nonnull TypeInfo[] typeInfo) throws SemanticException {
@@ -81,7 +82,7 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
 
         private ListObjectInspector recommendListOI;
         private ListObjectInspector truthListOI;
-        private PrimitiveObjectInspector recommendSizeOI;
+        private WritableIntObjectInspector recommendSizeOI;
 
         private StructObjectInspector internalMergeOI;
         private StructField countField;
@@ -91,7 +92,7 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
 
         @Override
         public ObjectInspector init(Mode mode, ObjectInspector[] parameters) throws HiveException {
-            assert (parameters.length >= 1 && parameters.length <= 3) : parameters.length;
+            assert (parameters.length == 2 || parameters.length == 3) : parameters.length;
             super.init(mode, parameters);
 
             // initialize input
@@ -99,7 +100,7 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
                 this.recommendListOI = (ListObjectInspector) parameters[0];
                 this.truthListOI = (ListObjectInspector) parameters[1];
                 if (parameters.length == 3) {
-                    this.recommendSizeOI = HiveUtils.asIntegerOI(parameters[2]);
+                    this.recommendSizeOI = (WritableIntObjectInspector) parameters[2];
                 }
             } else {// from partial aggregation
                 StructObjectInspector soi = (StructObjectInspector) parameters[0];
@@ -119,8 +120,8 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
         }
 
         private static StructObjectInspector internalMergeOI() {
-            List<String> fieldNames = new ArrayList<>();
-            List<ObjectInspector> fieldOIs = new ArrayList<>();
+            ArrayList<String> fieldNames = new ArrayList<String>();
+            ArrayList<ObjectInspector> fieldOIs = new ArrayList<ObjectInspector>();
 
             fieldNames.add("sum");
             fieldOIs.add(PrimitiveObjectInspectorFactory.writableDoubleObjectInspector);
@@ -160,12 +161,12 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
 
             int recommendSize = recommendList.size();
             if (parameters.length == 3) {
-                recommendSize = PrimitiveObjectInspectorUtils.getInt(parameters[2], recommendSizeOI);
-                if (recommendSize < 0) {
-                    throw new UDFArgumentException(
-                        "The third argument `int recommendSize` must be in greather than or equals to 0: "
-                                + recommendSize);
-                }
+                recommendSize = recommendSizeOI.get(parameters[2]);
+            }
+            if (recommendSize < 0 || recommendSize > recommendList.size()) {
+                throw new UDFArgumentException(
+                    "The third argument `int recommendSize` must be in [0, " + recommendList.size()
+                            + "]");
             }
 
             boolean isBinary = !HiveUtils.isStructOI(recommendListOI.getListElementObjectInspector());
@@ -179,31 +180,20 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
                 StructObjectInspector sOI = (StructObjectInspector) recommendListOI.getListElementObjectInspector();
                 List<?> fieldRefList = sOI.getAllStructFieldRefs();
                 StructField relScoreField = (StructField) fieldRefList.get(0);
-                PrimitiveObjectInspector relScoreFieldOI = HiveUtils.asDoubleCompatibleOI(relScoreField.getFieldObjectInspector());
+                WritableDoubleObjectInspector relScoreFieldOI = (WritableDoubleObjectInspector) relScoreField.getFieldObjectInspector();
                 for (int i = 0, n = recommendList.size(); i < n; i++) {
                     Object structObj = recommendList.get(i);
                     List<Object> fieldList = sOI.getStructFieldsDataAsList(structObj);
-                    Object field0 = fieldList.get(0);
-                    if (field0 == null) {
-                        throw new UDFArgumentException("Field 0 of a struct field is null: "
-                                + fieldList);
-                    }
-                    double relScore = PrimitiveObjectInspectorUtils.getDouble(field0,
-                        relScoreFieldOI);
+                    double relScore = (double) relScoreFieldOI.get(fieldList.get(0));
                     recommendRelScoreList.add(relScore);
                 }
 
                 // Create a ordered list of relevance scores for truth items
                 List<Double> truthRelScoreList = new ArrayList<Double>();
-                PrimitiveObjectInspector truthRelScoreOI = HiveUtils.asDoubleCompatibleOI(truthListOI.getListElementObjectInspector());
+                WritableDoubleObjectInspector truthRelScoreOI = (WritableDoubleObjectInspector) truthListOI.getListElementObjectInspector();
                 for (int i = 0, n = truthList.size(); i < n; i++) {
                     Object relScoreObj = truthList.get(i);
-                    if (relScoreObj == null) {
-                        throw new UDFArgumentException("Found null in the ground truth: "
-                                + truthList);
-                    }
-                    double relScore = PrimitiveObjectInspectorUtils.getDouble(relScoreObj,
-                        truthRelScoreOI);
+                    double relScore = (double) truthRelScoreOI.get(relScoreObj);
                     truthRelScoreList.add(relScore);
                 }
 
@@ -234,8 +224,8 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
 
             Object sumObj = internalMergeOI.getStructFieldData(partial, sumField);
             Object countObj = internalMergeOI.getStructFieldData(partial, countField);
-            double sum = writableDoubleObjectInspector.get(sumObj);
-            long count = writableLongObjectInspector.get(countObj);
+            double sum = PrimitiveObjectInspectorFactory.writableDoubleObjectInspector.get(sumObj);
+            long count = PrimitiveObjectInspectorFactory.writableLongObjectInspector.get(countObj);
 
             NDCGAggregationBuffer myAggr = (NDCGAggregationBuffer) agg;
             myAggr.merge(sum, count);

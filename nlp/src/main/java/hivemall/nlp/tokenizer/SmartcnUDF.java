@@ -110,7 +110,8 @@ public final class SmartcnUDF extends GenericUDF {
         if (array.length == 0) {
             return CharArraySet.EMPTY_SET;
         }
-        CharArraySet results = new CharArraySet(Arrays.asList(array), true /* ignoreCase */);
+        CharArraySet results = new CharArraySet(Arrays.asList(array), /* ignoreCase */
+        true);
         return results;
     }
 

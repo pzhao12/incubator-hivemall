@@ -21,9 +21,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.apache.hivemall</groupId>
+		<groupId>io.github.myui</groupId>
 		<artifactId>hivemall</artifactId>
-		<version>0.5.0-incubating-SNAPSHOT</version>
+		<version>0.4.2-rc.2</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -94,7 +94,7 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.hivemall</groupId>
+			<groupId>io.github.myui</groupId>
 			<artifactId>hivemall-core</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
@@ -149,7 +149,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>2.3</version>
 				<executions>
 					<!-- hivemall-xgboost_xx-xx.jar -->
 					<execution>
@@ -168,14 +168,6 @@
 									<include>ml.dmlc:xgboost4j</include>
 								</includes>
 							</artifactSet>
-							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>tracker.py</exclude>
-									</excludes>
-								</filter>
-							</filters>
 						</configuration>
 					</execution>
 					<!-- hivemall-xgboost_xx-xx-with-dependencies.jar including minimum dependencies -->
@@ -192,7 +184,7 @@
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<artifactSet>
 								<includes>
-									<include>org.apache.hivemall:hivemall-core</include>
+									<include>io.github.myui:hivemall-core</include>
 									<include>io.netty:netty-all</include>
 									<include>com.github.haifengl:smile-core</include>
 									<include>com.github.haifengl:smile-math</include>
@@ -202,15 +194,6 @@
 									<include>com.esotericsoftware.kryo:kryo</include>
 								</includes>
 							</artifactSet>
-							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>*.jar</exclude>
-										<exclude>tracker.py</exclude>
-									</excludes>
-								</filter>
-							</filters>
 						</configuration>
 					</execution>
 				</executions>

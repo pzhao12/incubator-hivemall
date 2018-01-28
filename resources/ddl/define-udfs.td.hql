@@ -49,7 +49,6 @@ create temporary function polynomial_features as 'hivemall.ftvec.pairing.Polynom
 create temporary function powered_features as 'hivemall.ftvec.pairing.PoweredFeaturesUDF';
 create temporary function rescale as 'hivemall.ftvec.scaling.RescaleUDF';
 create temporary function zscore as 'hivemall.ftvec.scaling.ZScoreUDF';
-create temporary function l1_normalize as 'hivemall.ftvec.scaling.L1NormalizationUDF';
 create temporary function l2_normalize as 'hivemall.ftvec.scaling.L2NormalizationUDF';
 create temporary function chi2 as 'hivemall.ftvec.selection.ChiSquareUDF';
 create temporary function snr as 'hivemall.ftvec.selection.SignalNoiseRatioUDAF';
@@ -131,15 +130,14 @@ create temporary function normalize_unicode as 'hivemall.tools.text.NormalizeUni
 create temporary function base91 as 'hivemall.tools.text.Base91UDF';
 create temporary function unbase91 as 'hivemall.tools.text.Unbase91UDF';
 create temporary function lr_datagen as 'hivemall.dataset.LogisticRegressionDataGeneratorUDTF';
-create temporary function f1score as 'hivemall.evaluation.F1ScoreUDAF';
-create temporary function fmeasure as 'hivemall.evaluation.FMeasureUDAF';
+create temporary function f1score as 'hivemall.evaluation.FMeasureUDAF';
 create temporary function mae as 'hivemall.evaluation.MeanAbsoluteErrorUDAF';
 create temporary function mse as 'hivemall.evaluation.MeanSquaredErrorUDAF';
 create temporary function rmse as 'hivemall.evaluation.RootMeanSquaredErrorUDAF';
 create temporary function r2 as 'hivemall.evaluation.R2UDAF';
 create temporary function ndcg as 'hivemall.evaluation.NDCGUDAF';
-create temporary function precision_at as 'hivemall.evaluation.PrecisionUDAF';
-create temporary function recall_at as 'hivemall.evaluation.RecallUDAF';
+create temporary function precision as 'hivemall.evaluation.PrecisionUDAF';
+create temporary function recall as 'hivemall.evaluation.RecallUDAF';
 create temporary function mrr as 'hivemall.evaluation.MRRUDAF';
 create temporary function average_precision as 'hivemall.evaluation.MAPUDAF';
 create temporary function auc as 'hivemall.evaluation.AUCUDAF';
@@ -157,7 +155,7 @@ create temporary function train_randomforest_regr as 'hivemall.smile.regression.
 create temporary function tree_predict as 'hivemall.smile.tools.TreePredictUDF';
 create temporary function rf_ensemble as 'hivemall.smile.tools.RandomForestEnsembleUDAF';
 create temporary function guess_attribute_types as 'hivemall.smile.tools.GuessAttributesUDF';
--- since Hivemall v0.5
+-- since Hivemall v0.5-rc.1
 create temporary function changefinder as 'hivemall.anomaly.ChangeFinderUDF';
 create temporary function sst as 'hivemall.anomaly.SingularSpectrumTransformUDF';
 create temporary function train_lda as 'hivemall.topicmodel.LDAUDTF';
@@ -174,17 +172,8 @@ create temporary function haversine_distance as 'hivemall.geospatial.HaversineDi
 create temporary function l2_norm as 'hivemall.tools.math.L2NormUDAF';
 create temporary function dimsum_mapper as 'hivemall.knn.similarity.DIMSUMMapperUDTF';
 create temporary function train_classifier as 'hivemall.classifier.GeneralClassifierUDTF';
-create temporary function train_regressor as 'hivemall.regression.GeneralRegressorUDTF';
+create temporary function train_regression as 'hivemall.regression.GeneralRegressionUDTF';
 create temporary function tree_export as 'hivemall.smile.tools.TreeExportUDF';
-create temporary function train_ffm as 'hivemall.fm.FieldAwareFactorizationMachineUDTF';
-create temporary function ffm_predict as 'hivemall.fm.FFMPredictGenericUDAF';
-create temporary function add_field_indices as 'hivemall.ftvec.trans.AddFieldIndicesUDF';
-create temporary function to_ordered_list as 'hivemall.tools.list.UDAFToOrderedList';
-create temporary function singularize as 'hivemall.tools.text.SingularizeUDF';
-create temporary function train_slim as 'hivemall.recommend.SlimUDTF';
-create temporary function hitrate as 'hivemall.evaluation.HitRateUDAF';
-create temporary function word_ngrams as 'hivemall.tools.text.WordNgramsUDF';
-create temporary function approx_count_distinct as 'hivemall.sketch.hll.ApproxCountDistinctUDAF';
 
 -- NLP features
 create temporary function tokenize_ja as 'hivemall.nlp.tokenizer.KuromojiUDF';
@@ -195,8 +184,4 @@ create temporary function concat_array as 'hivemall.tools.array.ArrayConcatUDF';
 create temporary function pa2a_regress as 'hivemall.regression.PassiveAggressiveRegressionUDTF$PA2a';
 create temporary function arow_regress as 'hivemall.regression.AROWRegressionUDTF';
 create temporary function addBias as 'hivemall.ftvec.AddBiasUDF';
-create temporary function tree_predict_v1 as 'hivemall.smile.tools.TreePredictUDFv1';
-create temporary function add_field_indicies as 'hivemall.ftvec.trans.AddFieldIndicesUDF';
 
--- alias for TD
-create temporary function approx_distinct as 'hivemall.sketch.hll.ApproxCountDistinctUDAF';

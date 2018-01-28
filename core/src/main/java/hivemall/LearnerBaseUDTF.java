@@ -18,6 +18,7 @@
  */
 package hivemall;
 
+import static org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory.writableFloatObjectInspector;
 import hivemall.mix.MixMessage.MixEventName;
 import hivemall.mix.client.MixClient;
 import hivemall.model.DenseModel;
@@ -28,14 +29,22 @@ import hivemall.model.PredictionModel;
 import hivemall.model.SpaceEfficientDenseModel;
 import hivemall.model.SparseModel;
 import hivemall.model.SynchronizedModelWrapper;
+import hivemall.model.WeightValue;
+import hivemall.model.WeightValue.WeightValueWithCovar;
 import hivemall.optimizer.DenseOptimizerFactory;
 import hivemall.optimizer.Optimizer;
 import hivemall.optimizer.SparseOptimizerFactory;
+import hivemall.utils.datetime.StopWatch;
+import hivemall.utils.hadoop.HadoopUtils;
 import hivemall.utils.hadoop.HiveUtils;
 import hivemall.utils.io.IOUtils;
 import hivemall.utils.lang.Preconditions;
 import hivemall.utils.lang.Primitives;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.CheckForNull;
@@ -48,17 +57,21 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.serde2.SerDeException;
+import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorUtils;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
+import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.FloatObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.WritableFloatObjectInspector;
+import org.apache.hadoop.io.Text;
 
 public abstract class LearnerBaseUDTF extends UDTFWithOptions {
     private static final Log logger = LogFactory.getLog(LearnerBaseUDTF.class);
-    private static final int DEFAULT_SPARSE_DIMS = 16384;
-    private static final int DEFAULT_DENSE_DIMS = 16777216;
 
     protected final boolean enableNewModel;
+    protected String preloadedModelFile;
     protected boolean dense_model;
     protected int model_dims;
     protected boolean disable_halffloat;
@@ -84,6 +97,7 @@ public abstract class LearnerBaseUDTF extends UDTFWithOptions {
     @Override
     protected Options getOptions() {
         Options opts = new Options();
+        opts.addOption("loadmodel", true, "Model file name in the distributed cache");
         opts.addOption("dense", "densemodel", false, "Use dense model or not");
         opts.addOption("dims", "feature_dimensions", true,
             "The dimension of model [default: 16777216 (2^24)]");
@@ -105,6 +119,7 @@ public abstract class LearnerBaseUDTF extends UDTFWithOptions {
     @Override
     protected CommandLine processOptions(@Nonnull ObjectInspector[] argOIs)
             throws UDFArgumentException {
+        String modelfile = null;
         boolean denseModel = false;
         int modelDims = -1;
         boolean disableHalfFloat = false;
@@ -120,9 +135,11 @@ public abstract class LearnerBaseUDTF extends UDTFWithOptions {
             String rawArgs = HiveUtils.getConstString(argOIs[2]);
             cl = parseOptions(rawArgs);
 
+            modelfile = cl.getOptionValue("loadmodel");
+
             denseModel = cl.hasOption("dense");
             if (denseModel) {
-                modelDims = Primitives.parseInt(cl.getOptionValue("dims"), DEFAULT_DENSE_DIMS);
+                modelDims = Primitives.parseInt(cl.getOptionValue("dims"), 16777216);
             }
             disableHalfFloat = cl.hasOption("disable_halffloat");
 
@@ -143,6 +160,7 @@ public abstract class LearnerBaseUDTF extends UDTFWithOptions {
             ssl = cl.hasOption("ssl");
         }
 
+        this.preloadedModelFile = modelfile;
         this.dense_model = denseModel;
         this.model_dims = modelDims;
         this.disable_halffloat = disableHalfFloat;
@@ -170,7 +188,7 @@ public abstract class LearnerBaseUDTF extends UDTFWithOptions {
         PredictionModel model;
         final boolean useCovar = useCovariance();
         if (dense_model) {
-            if (disable_halffloat == false && model_dims > DEFAULT_DENSE_DIMS) {
+            if (disable_halffloat == false && model_dims > 16777216) {
                 logger.info("Build a space efficient dense model with " + model_dims
                         + " initial dimensions" + (useCovar ? " w/ covariances" : ""));
                 model = new SpaceEfficientDenseModel(model_dims, useCovar);
@@ -201,7 +219,7 @@ public abstract class LearnerBaseUDTF extends UDTFWithOptions {
         PredictionModel model;
         final boolean useCovar = useCovariance();
         if (dense_model) {
-            if (disable_halffloat == false && model_dims > DEFAULT_DENSE_DIMS) {
+            if (disable_halffloat == false && model_dims > 16777216) {
                 logger.info("Build a space efficient dense model with " + model_dims
                         + " initial dimensions" + (useCovar ? " w/ covariances" : ""));
                 model = new NewSpaceEfficientDenseModel(model_dims, useCovar);
@@ -231,11 +249,9 @@ public abstract class LearnerBaseUDTF extends UDTFWithOptions {
     protected final Optimizer createOptimizer(@CheckForNull Map<String, String> options) {
         Preconditions.checkNotNull(options);
         if (dense_model) {
-            return DenseOptimizerFactory.create(model_dims < 0 ? DEFAULT_DENSE_DIMS : model_dims,
-                options);
+            return DenseOptimizerFactory.create(model_dims, options);
         } else {
-            return SparseOptimizerFactory.create(model_dims < 0 ? DEFAULT_SPARSE_DIMS : model_dims,
-                options);
+            return SparseOptimizerFactory.create(model_dims, options);
         }
     }
 
@@ -256,14 +272,124 @@ public abstract class LearnerBaseUDTF extends UDTFWithOptions {
         return 16384;
     }
 
-    @Nonnull
-    protected ObjectInspector getFeatureOutputOI(@Nonnull PrimitiveObjectInspector featureInputOI)
-            throws UDFArgumentException {
-        if (dense_model) {
-            // TODO validation
-            return PrimitiveObjectInspectorFactory.javaIntObjectInspector; // see DenseModel
+    protected void loadPredictionModel(PredictionModel model, String filename,
+            PrimitiveObjectInspector keyOI) {
+        final StopWatch elapsed = new StopWatch();
+        final long lines;
+        try {
+            if (useCovariance()) {
+                lines = loadPredictionModel(model, new File(filename), keyOI,
+                    writableFloatObjectInspector, writableFloatObjectInspector);
+            } else {
+                lines = loadPredictionModel(model, new File(filename), keyOI,
+                    writableFloatObjectInspector);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load a model: " + filename, e);
+        } catch (SerDeException e) {
+            throw new RuntimeException("Failed to load a model: " + filename, e);
         }
-        return ObjectInspectorUtils.getStandardObjectInspector(featureInputOI);
+        if (model.size() > 0) {
+            logger.info("Loaded " + model.size() + " features from distributed cache '" + filename
+                    + "' (" + lines + " lines) in " + elapsed);
+        }
+    }
+
+    private static long loadPredictionModel(PredictionModel model, File file,
+            PrimitiveObjectInspector keyOI, WritableFloatObjectInspector valueOI)
+            throws IOException, SerDeException {
+        long count = 0L;
+        if (!file.exists()) {
+            return count;
+        }
+        if (!file.getName().endsWith(".crc")) {
+            if (file.isDirectory()) {
+                for (File f : file.listFiles()) {
+                    count += loadPredictionModel(model, f, keyOI, valueOI);
+                }
+            } else {
+                LazySimpleSerDe serde = HiveUtils.getKeyValueLineSerde(keyOI, valueOI);
+                StructObjectInspector lineOI = (StructObjectInspector) serde.getObjectInspector();
+                StructField keyRef = lineOI.getStructFieldRef("key");
+                StructField valueRef = lineOI.getStructFieldRef("value");
+                PrimitiveObjectInspector keyRefOI = (PrimitiveObjectInspector) keyRef.getFieldObjectInspector();
+                FloatObjectInspector varRefOI = (FloatObjectInspector) valueRef.getFieldObjectInspector();
+
+                BufferedReader reader = null;
+                try {
+                    reader = HadoopUtils.getBufferedReader(file);
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        count++;
+                        Text lineText = new Text(line);
+                        Object lineObj = serde.deserialize(lineText);
+                        List<Object> fields = lineOI.getStructFieldsDataAsList(lineObj);
+                        Object f0 = fields.get(0);
+                        Object f1 = fields.get(1);
+                        if (f0 == null || f1 == null) {
+                            continue; // avoid the case that key or value is null
+                        }
+                        Object k = keyRefOI.getPrimitiveWritableObject(keyRefOI.copyObject(f0));
+                        float v = varRefOI.get(f1);
+                        model.set(k, new WeightValue(v, false));
+                    }
+                } finally {
+                    IOUtils.closeQuietly(reader);
+                }
+            }
+        }
+        return count;
+    }
+
+    private static long loadPredictionModel(PredictionModel model, File file,
+            PrimitiveObjectInspector featureOI, WritableFloatObjectInspector weightOI,
+            WritableFloatObjectInspector covarOI) throws IOException, SerDeException {
+        long count = 0L;
+        if (!file.exists()) {
+            return count;
+        }
+        if (!file.getName().endsWith(".crc")) {
+            if (file.isDirectory()) {
+                for (File f : file.listFiles()) {
+                    count += loadPredictionModel(model, f, featureOI, weightOI, covarOI);
+                }
+            } else {
+                LazySimpleSerDe serde = HiveUtils.getLineSerde(featureOI, weightOI, covarOI);
+                StructObjectInspector lineOI = (StructObjectInspector) serde.getObjectInspector();
+                StructField c1ref = lineOI.getStructFieldRef("c1");
+                StructField c2ref = lineOI.getStructFieldRef("c2");
+                StructField c3ref = lineOI.getStructFieldRef("c3");
+                PrimitiveObjectInspector c1oi = (PrimitiveObjectInspector) c1ref.getFieldObjectInspector();
+                FloatObjectInspector c2oi = (FloatObjectInspector) c2ref.getFieldObjectInspector();
+                FloatObjectInspector c3oi = (FloatObjectInspector) c3ref.getFieldObjectInspector();
+
+                BufferedReader reader = null;
+                try {
+                    reader = HadoopUtils.getBufferedReader(file);
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        count++;
+                        Text lineText = new Text(line);
+                        Object lineObj = serde.deserialize(lineText);
+                        List<Object> fields = lineOI.getStructFieldsDataAsList(lineObj);
+                        Object f0 = fields.get(0);
+                        Object f1 = fields.get(1);
+                        Object f2 = fields.get(2);
+                        if (f0 == null || f1 == null) {
+                            continue; // avoid unexpected case
+                        }
+                        Object k = c1oi.getPrimitiveWritableObject(c1oi.copyObject(f0));
+                        float v = c2oi.get(f1);
+                        float cov = (f2 == null) ? WeightValueWithCovar.DEFAULT_COVAR
+                                : c3oi.get(f2);
+                        model.set(k, new WeightValueWithCovar(v, cov, false));
+                    }
+                } finally {
+                    IOUtils.closeQuietly(reader);
+                }
+            }
+        }
+        return count;
     }
 
     @Override

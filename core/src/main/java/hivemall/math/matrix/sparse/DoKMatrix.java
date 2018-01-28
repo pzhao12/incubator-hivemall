@@ -21,24 +21,17 @@ package hivemall.math.matrix.sparse;
 import hivemall.annotations.Experimental;
 import hivemall.math.matrix.AbstractMatrix;
 import hivemall.math.matrix.ColumnMajorMatrix;
-import hivemall.math.matrix.MatrixUtils;
 import hivemall.math.matrix.RowMajorMatrix;
 import hivemall.math.matrix.builders.DoKMatrixBuilder;
 import hivemall.math.vector.Vector;
 import hivemall.math.vector.VectorProcedure;
 import hivemall.utils.collections.maps.Long2DoubleOpenHashTable;
-import hivemall.utils.collections.maps.Long2DoubleOpenHashTable.IMapIterator;
 import hivemall.utils.lang.Preconditions;
 import hivemall.utils.lang.Primitives;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 
-/**
- * Dictionary Of Keys based sparse matrix.
- *
- * This is an efficient structure for constructing a sparse matrix incrementally.
- */
 @Experimental
 public final class DoKMatrix extends AbstractMatrix {
 
@@ -170,6 +163,8 @@ public final class DoKMatrix extends AbstractMatrix {
     @Override
     public double get(@Nonnegative final int row, @Nonnegative final int col,
             final double defaultValue) {
+        checkIndex(row, col, numRows, numColumns);
+
         long index = index(row, col);
         return elements.get(index, defaultValue);
     }
@@ -178,11 +173,11 @@ public final class DoKMatrix extends AbstractMatrix {
     public void set(@Nonnegative final int row, @Nonnegative final int col, final double value) {
         checkIndex(row, col);
 
-        final long index = index(row, col);
-        if (value == 0.d && elements.containsKey(index) == false) {
+        if (value == 0.d) {
             return;
         }
 
+        long index = index(row, col);
         if (elements.put(index, value, 0.d) == 0.d) {
             nnz++;
             this.numRows = Math.max(numRows, row + 1);
@@ -195,12 +190,8 @@ public final class DoKMatrix extends AbstractMatrix {
             final double value) {
         checkIndex(row, col);
 
-        final long index = index(row, col);
-        if (value == 0.d && elements.containsKey(index) == false) {
-            return 0.d;
-        }
-
-        final double old = elements.put(index, value, 0.d);
+        long index = index(row, col);
+        double old = elements.put(index, value, 0.d);
         if (old == 0.d) {
             nnz++;
             this.numRows = Math.max(numRows, row + 1);
@@ -318,60 +309,14 @@ public final class DoKMatrix extends AbstractMatrix {
         }
     }
 
-    public void eachNonZeroCell(@Nonnull final VectorProcedure procedure) {
-        if (nnz == 0) {
-            return;
-        }
-        final IMapIterator itor = elements.entries();
-        while (itor.next() != -1) {
-            long k = itor.getKey();
-            int row = Primitives.getHigh(k);
-            int col = Primitives.getLow(k);
-            double value = itor.getValue();
-            procedure.apply(row, col, value);
-        }
-    }
-
     @Override
     public RowMajorMatrix toRowMajorMatrix() {
-        final int nnz = elements.size();
-        final int[] rows = new int[nnz];
-        final int[] cols = new int[nnz];
-        final double[] data = new double[nnz];
-
-        final IMapIterator itor = elements.entries();
-        for (int i = 0; i < nnz; i++) {
-            if (itor.next() == -1) {
-                throw new IllegalStateException("itor.next() returns -1 where i=" + i);
-            }
-            long k = itor.getKey();
-            rows[i] = Primitives.getHigh(k);
-            cols[i] = Primitives.getLow(k);
-            data[i] = itor.getValue();
-        }
-
-        return MatrixUtils.coo2csr(rows, cols, data, numRows, numColumns, true);
+        throw new UnsupportedOperationException("Not yet supported");
     }
 
     @Override
     public ColumnMajorMatrix toColumnMajorMatrix() {
-        final int nnz = elements.size();
-        final int[] rows = new int[nnz];
-        final int[] cols = new int[nnz];
-        final double[] data = new double[nnz];
-
-        final IMapIterator itor = elements.entries();
-        for (int i = 0; i < nnz; i++) {
-            if (itor.next() == -1) {
-                throw new IllegalStateException("itor.next() returns -1 where i=" + i);
-            }
-            long k = itor.getKey();
-            rows[i] = Primitives.getHigh(k);
-            cols[i] = Primitives.getLow(k);
-            data[i] = itor.getValue();
-        }
-
-        return MatrixUtils.coo2csc(rows, cols, data, numRows, numColumns, true);
+        throw new UnsupportedOperationException("Not yet supported");
     }
 
     @Override

@@ -207,9 +207,6 @@ create temporary function rescale as 'hivemall.ftvec.scaling.RescaleUDF';
 drop temporary function if exists zscore;
 create temporary function zscore as 'hivemall.ftvec.scaling.ZScoreUDF';
 
-drop temporary function if exists l1_normalize;
-create temporary function l1_normalize as 'hivemall.ftvec.scaling.L1NormalizationUDF';
-
 drop temporary function if exists l2_normalize;
 create temporary function l2_normalize as 'hivemall.ftvec.scaling.L2NormalizationUDF';
 
@@ -312,13 +309,6 @@ create temporary function binarize_label as 'hivemall.ftvec.trans.BinarizeLabelU
 drop temporary function if exists onehot_encoding;
 create temporary function onehot_encoding as 'hivemall.ftvec.trans.OnehotEncodingUDAF';
 
-drop temporary function if exists add_field_indices;
-create temporary function add_field_indices as 'hivemall.ftvec.trans.AddFieldIndicesUDF';
-
--- alias for backward compatibility
-drop temporary function if exists add_field_indicies;
-create temporary function add_field_indicies as 'hivemall.ftvec.trans.AddFieldIndicesUDF';
-
 ------------------------------
 -- ranking helper functions --
 ------------------------------
@@ -343,8 +333,8 @@ create temporary function tf as 'hivemall.ftvec.text.TermFrequencyUDAF';
 -- Regression functions --
 --------------------------
 
-drop temporary function if exists train_regressor;
-create temporary function train_regressor as 'hivemall.regression.GeneralRegressorUDTF';
+drop temporary function if exists train_regression;
+create temporary function train_regression as 'hivemall.regression.GeneralRegressionUDTF';
 
 drop temporary function if exists logress;
 create temporary function logress as 'hivemall.regression.LogressUDTF';
@@ -466,13 +456,6 @@ drop temporary function if exists to_ordered_map;
 create temporary function to_ordered_map as 'hivemall.tools.map.UDAFToOrderedMap';
 
 ---------------------
--- list functions --
----------------------
-
-drop temporary function if exists to_ordered_list;
-create temporary function to_ordered_list as 'hivemall.tools.list.UDAFToOrderedList';
-
----------------------
 -- Math functions --
 ---------------------
 
@@ -537,9 +520,6 @@ create temporary function tokenize as 'hivemall.tools.text.TokenizeUDF';
 drop temporary function if exists is_stopword;
 create temporary function is_stopword as 'hivemall.tools.text.StopwordUDF';
 
-drop temporary function if exists singularize;
-create temporary function singularize as 'hivemall.tools.text.SingularizeUDF';
-
 drop temporary function if exists split_words;
 create temporary function split_words as 'hivemall.tools.text.SplitWordsUDF';
 
@@ -551,9 +531,6 @@ create temporary function base91 as 'hivemall.tools.text.Base91UDF';
 
 drop temporary function if exists unbase91;
 create temporary function unbase91 as 'hivemall.tools.text.Unbase91UDF';
-
-drop temporary function if exists word_ngrams;
-create temporary function word_ngrams as 'hivemall.tools.text.WordNgramsUDF';
 
 ---------------------------------
 -- Dataset generator functions --
@@ -567,10 +544,7 @@ create temporary function lr_datagen as 'hivemall.dataset.LogisticRegressionData
 --------------------------
 
 drop temporary function if exists f1score;
-create temporary function f1score as 'hivemall.evaluation.F1ScoreUDAF';
-
-drop temporary function if exists fmeasure;
-create temporary function fmeasure as 'hivemall.evaluation.FMeasureUDAF';
+create temporary function f1score as 'hivemall.evaluation.FMeasureUDAF';
 
 drop temporary function if exists mae;
 create temporary function mae as 'hivemall.evaluation.MeanAbsoluteErrorUDAF';
@@ -587,14 +561,11 @@ create temporary function r2 as 'hivemall.evaluation.R2UDAF';
 drop temporary function if exists ndcg;
 create temporary function ndcg as 'hivemall.evaluation.NDCGUDAF';
 
-drop temporary function if exists precision_at;
-create temporary function precision_at as 'hivemall.evaluation.PrecisionUDAF';
+drop temporary function if exists precision;
+create temporary function precision as 'hivemall.evaluation.PrecisionUDAF';
 
-drop temporary function if exists recall_at;
-create temporary function recall_at as 'hivemall.evaluation.RecallUDAF';
-
-drop temporary function if exists hitrate;
-create temporary function hitrate as 'hivemall.evaluation.HitRateUDAF';
+drop temporary function if exists recall;
+create temporary function recall as 'hivemall.evaluation.RecallUDAF';
 
 drop temporary function if exists mrr;
 create temporary function mrr as 'hivemall.evaluation.MRRUDAF';
@@ -641,7 +612,7 @@ drop temporary function if exists train_ffm;
 create temporary function train_ffm as 'hivemall.fm.FieldAwareFactorizationMachineUDTF';
 
 drop temporary function if exists ffm_predict;
-create temporary function ffm_predict as 'hivemall.fm.FFMPredictGenericUDAF';
+create temporary function ffm_predict as 'hivemall.fm.FFMPredictUDF';
 
 ---------------------------
 -- Anomaly Detection ------
@@ -710,10 +681,6 @@ create temporary function train_randomforest_regr as 'hivemall.smile.regression.
 drop temporary function if exists tree_predict;
 create temporary function tree_predict as 'hivemall.smile.tools.TreePredictUDF';
 
--- for backward compatibility
-drop temporary function if exists tree_predict_v1;
-create temporary function tree_predict_v1 as 'hivemall.smile.tools.TreePredictUDFv1';
-
 drop temporary function if exists tree_export;
 create temporary function tree_export as 'hivemall.smile.tools.TreeExportUDF';
 
@@ -722,20 +689,6 @@ create temporary function rf_ensemble as 'hivemall.smile.tools.RandomForestEnsem
 
 drop temporary function if exists guess_attribute_types;
 create temporary function guess_attribute_types as 'hivemall.smile.tools.GuessAttributesUDF';
-
---------------------
--- Recommendation --
---------------------
-
-drop temporary function if exists train_slim;
-create temporary function train_slim as 'hivemall.recommend.SlimUDTF';
-
------------------
--- Data Sketch --
------------------
-
-drop temporary function if exists approx_count_distinct;
-create temporary function approx_count_distinct as 'hivemall.sketch.hll.ApproxCountDistinctUDAF';
 
 --------------------------------------------------------------------------------------------------
 -- macros available from hive 0.12.0

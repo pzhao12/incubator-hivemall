@@ -20,8 +20,8 @@ package hivemall.mf;
 
 import hivemall.UDTFWithOptions;
 import hivemall.common.ConversionState;
-import hivemall.mf.FactorizedModel.RankInitScheme;
 import hivemall.optimizer.EtaEstimator;
+import hivemall.mf.FactorizedModel.RankInitScheme;
 import hivemall.utils.hadoop.HiveUtils;
 import hivemall.utils.io.FileUtils;
 import hivemall.utils.io.NioFixedSegment;
@@ -479,8 +479,8 @@ public final class BPRMatrixFactorizationUDTF extends UDTFWithOptions implements
                 }
                 inputBuf.flip();
 
-                for (int iter = 2; iter <= iterations; iter++) {
-                    cvState.next();
+                int iter = 2;
+                for (; iter <= iterations; iter++) {
                     reportProgress(reporter);
                     setCounterValue(iterCounter, iter);
 
@@ -493,7 +493,8 @@ public final class BPRMatrixFactorizationUDTF extends UDTFWithOptions implements
                         train(u, i, j);
                     }
                     cvState.multiplyLoss(0.5d);
-                    if (cvState.isConverged(numTrainingExamples)) {
+                    cvState.logState(iter, eta());
+                    if (cvState.isConverged(iter, numTrainingExamples)) {
                         break;
                     }
                     if (cvState.isLossIncreased()) {
@@ -503,7 +504,7 @@ public final class BPRMatrixFactorizationUDTF extends UDTFWithOptions implements
                     }
                     inputBuf.rewind();
                 }
-                LOG.info("Performed " + cvState.getCurrentIteration() + " iterations of "
+                LOG.info("Performed " + Math.min(iter, iterations) + " iterations of "
                         + NumberUtils.formatNumber(numTrainingExamples)
                         + " training examples on memory (thus " + NumberUtils.formatNumber(count)
                         + " training updates in total) ");
@@ -512,8 +513,9 @@ public final class BPRMatrixFactorizationUDTF extends UDTFWithOptions implements
                 // write training examples in buffer to a temporary file
                 if (inputBuf.position() > 0) {
                     writeBuffer(inputBuf, fileIO, lastWritePos);
+                } else if (lastWritePos == 0) {
+                    return; // no training example
                 }
-
                 try {
                     fileIO.flush();
                 } catch (IOException e) {
@@ -529,8 +531,8 @@ public final class BPRMatrixFactorizationUDTF extends UDTFWithOptions implements
                 }
 
                 // run iterations
-                for (int iter = 2; iter <= iterations; iter++) {
-                    cvState.next();
+                int iter = 2;
+                for (; iter <= iterations; iter++) {
                     setCounterValue(iterCounter, iter);
 
                     inputBuf.clear();
@@ -567,7 +569,8 @@ public final class BPRMatrixFactorizationUDTF extends UDTFWithOptions implements
                         inputBuf.compact();
                     }
                     cvState.multiplyLoss(0.5d);
-                    if (cvState.isConverged(numTrainingExamples)) {
+                    cvState.logState(iter, eta());
+                    if (cvState.isConverged(iter, numTrainingExamples)) {
                         break;
                     }
                     if (cvState.isLossIncreased()) {
@@ -576,7 +579,7 @@ public final class BPRMatrixFactorizationUDTF extends UDTFWithOptions implements
                         etaEstimator.update(0.5f);
                     }
                 }
-                LOG.info("Performed " + cvState.getCurrentIteration() + " iterations of "
+                LOG.info("Performed " + Math.min(iter, iterations) + " iterations of "
                         + NumberUtils.formatNumber(numTrainingExamples)
                         + " training examples using a secondary storage (thus "
                         + NumberUtils.formatNumber(count) + " training updates in total)");
