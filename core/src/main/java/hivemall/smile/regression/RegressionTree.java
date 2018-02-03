@@ -34,6 +34,7 @@
 package hivemall.smile.regression;
 
 import static hivemall.smile.utils.SmileExtUtils.resolveFeatureName;
+import static hivemall.smile.utils.SmileExtUtils.resolveName;
 import hivemall.annotations.VisibleForTesting;
 import hivemall.math.matrix.Matrix;
 import hivemall.math.matrix.ints.ColumnMajorIntMatrix;
@@ -49,7 +50,6 @@ import hivemall.utils.collections.lists.IntArrayList;
 import hivemall.utils.collections.sets.IntArraySet;
 import hivemall.utils.collections.sets.IntSet;
 import hivemall.utils.lang.ObjectUtils;
-import hivemall.utils.lang.StringUtils;
 import hivemall.utils.lang.mutable.MutableInt;
 import hivemall.utils.math.MathUtils;
 
@@ -57,9 +57,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.PriorityQueue;
 
 import javax.annotation.Nonnull;
@@ -376,57 +374,6 @@ public final class RegressionTree implements Regression<Vector> {
             }
         }
 
-        @Deprecated
-        public int opCodegen(@Nonnull final List<String> scripts, int depth) {
-            int selfDepth = 0;
-            final StringBuilder buf = new StringBuilder();
-            if (trueChild == null && falseChild == null) {
-                buf.append("push ").append(output);
-                scripts.add(buf.toString());
-                buf.setLength(0);
-                buf.append("goto last");
-                scripts.add(buf.toString());
-                selfDepth += 2;
-            } else {
-                if (splitFeatureType == AttributeType.NOMINAL) {
-                    buf.append("push ").append("x[").append(splitFeature).append("]");
-                    scripts.add(buf.toString());
-                    buf.setLength(0);
-                    buf.append("push ").append(splitValue);
-                    scripts.add(buf.toString());
-                    buf.setLength(0);
-                    buf.append("ifeq ");
-                    scripts.add(buf.toString());
-                    depth += 3;
-                    selfDepth += 3;
-                    int trueDepth = trueChild.opCodegen(scripts, depth);
-                    selfDepth += trueDepth;
-                    scripts.set(depth - 1, "ifeq " + String.valueOf(depth + trueDepth));
-                    int falseDepth = falseChild.opCodegen(scripts, depth + trueDepth);
-                    selfDepth += falseDepth;
-                } else if (splitFeatureType == AttributeType.NUMERIC) {
-                    buf.append("push ").append("x[").append(splitFeature).append("]");
-                    scripts.add(buf.toString());
-                    buf.setLength(0);
-                    buf.append("push ").append(splitValue);
-                    scripts.add(buf.toString());
-                    buf.setLength(0);
-                    buf.append("ifle ");
-                    scripts.add(buf.toString());
-                    depth += 3;
-                    selfDepth += 3;
-                    int trueDepth = trueChild.opCodegen(scripts, depth);
-                    selfDepth += trueDepth;
-                    scripts.set(depth - 1, "ifle " + String.valueOf(depth + trueDepth));
-                    int falseDepth = falseChild.opCodegen(scripts, depth + trueDepth);
-                    selfDepth += falseDepth;
-                } else {
-                    throw new IllegalStateException("Unsupported attribute type: "
-                            + splitFeatureType);
-                }
-            }
-            return selfDepth;
-        }
 
         @Override
         public void writeExternal(ObjectOutput out) throws IOException {
@@ -986,21 +933,10 @@ public final class RegressionTree implements Regression<Vector> {
         return _root.predict(x);
     }
 
-    @Nonnull
     public String predictJsCodegen(@Nonnull final String[] featureNames) {
         StringBuilder buf = new StringBuilder(1024);
         _root.exportJavascript(buf, featureNames, 0);
         return buf.toString();
-    }
-
-    @Deprecated
-    @Nonnull
-    public String predictOpCodegen(@Nonnull String sep) {
-        List<String> opslist = new ArrayList<String>();
-        _root.opCodegen(opslist, 0);
-        opslist.add("call end");
-        String scripts = StringUtils.concat(opslist, sep);
-        return scripts;
     }
 
     @Nonnull

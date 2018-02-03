@@ -28,11 +28,6 @@ Practical machine learning applications such as information retrieval and recomm
 
 This page focuses on evaluation of the results from such ranking problems.
 
-> #### Caution
-> In order to obtain ranked list of items, this page introduces queries using `to_ordered_map()` such as `map_values(to_ordered_map(score, itemid, true))`. However, this kind of usage has a potential issue that multiple `itemid`-s (i.e., values) which have the exactly same `score` (i.e., key) will be aggregated to single arbitrary `itemid`, because `to_ordered_map()` creates a key-value map which uses duplicated `score` as key.
->
-> Hence, if map key could duplicate on more then one map values, we recommend you to use `to_ordered_list(value, key, '-reverse')` instead of `map_values(to_ordered_map(key, value, true))`. The alternative approach is available from Hivemall v0.5-rc.1 or later.
-
 # Binary Response Measures
 
 In a context of ranking problem, **binary response** means that binary labels are assigned to items, and positive items are considered as *truth* observations.
@@ -83,8 +78,7 @@ with truth as (
 rec as (
   select
     userid,
-    -- map_values(to_ordered_map(score, itemid, true)) as rec,
-    to_ordered_list(itemid, score, '-reverse') as rec,
+    map_values(to_ordered_map(score, itemid, true)) as rec,
     cast(count(itemid) as int) as max_k
   from dummy_rec
   group by userid
@@ -93,12 +87,12 @@ select
   -- rec = [1,3,2,6], truth = [1,2,4] for each user
 	
   -- Recall@k
-  recall_at(t1.rec, t2.truth, t1.max_k) as recall,
-  recall_at(t1.rec, t2.truth, 2) as recall_at_2,
+  recall(t1.rec, t2.truth, t1.max_k) as recall,
+  recall(t1.rec, t2.truth, 2) as recall_at_2,
 
   -- Precision@k
-  precision_at(t1.rec, t2.truth, t1.max_k) as precision,
-  precision_at(t1.rec, t2.truth, 2) as precision_at_2,
+  precision(t1.rec, t2.truth, t1.max_k) as precision,
+  precision(t1.rec, t2.truth, 2) as precision_at_2,
 
   -- MAP
   average_precision(t1.rec, t2.truth, t1.max_k) as average_precision,
@@ -132,9 +126,6 @@ We have six different measures, and outputs will be:
 | NDCG | 0.7039180890341349 | 0.6131471927654585 |
 
 Here, we introduce the six measures for evaluation of ranked list of items. Importantly, each metric has a different concept behind formulation, and the accuracy measured by the metrics shows different values even for the exactly same input as demonstrated above. Thus, evaluation using multiple ranking measures is more convincing, and it should be easy in Hivemall.
-
-> #### Caution
-> Before Hivemall v0.5-rc.1, `recall_at()` and `precision_at()` are respectively registered as `recall()` and `precision()`. However, since `precision` is a reserved keyword from Hive v2.2.0, [we renamed the function names](https://issues.apache.org/jira/browse/HIVEMALL-140). If you are still using `recall()` and/or `precision()`, we strongly recommend you to use the latest version of Hivemall and replace them with the newer function names.
 
 ## Recall-At-k
 
@@ -223,7 +214,7 @@ While the binary response setting simply considers positive-only ranked list of 
 
 Unlike separated `dummy_truth` and `dummy_rec` table in the binary setting, we assume the following single table named `dummy_recrel` which contains item-$$\mathrm{rel}_n$$ pairs:
 
-| userid | itemid | score<br/>(predicted) | relscore<br/>(expected) |
+| userid | itemid | score<br/>(predicted) | rel<br/>(expected) |
 | :-: | :-: | :-: | :-: |
 | 1 | 1 | 10.0 | 5.0 |
 | 1 | 3 | 8.0 | 2.0 |
@@ -245,31 +236,27 @@ The function `ndcg()` can take non-binary `truth` values as the second argument:
 
 ```sql
 with truth as (
-  select
-    userid,
-    to_ordered_list(relscore, '-reverse') as truth
-  from
-    dummy_recrel
-  group by
-    userid
+  select userid, map_keys(to_ordered_map(relscore, itemid, true)) as truth
+  from dummy_recrel
+  group by userid
 ),
 rec as (
   select
     userid,
-    to_ordered_list(struct(relscore, itemid), score, "-reverse") as rec,
-    count(itemid) as max_k
-  from
-    dummy_recrel
-  group by
-    userid
+    map_values (
+      to_ordered_map(score, struct(relscore, itemid), true)
+    ) as rec,
+    cast(count(itemid) as int) as max_k
+  from dummy_recrel
+  group by userid
 )
 select 
   -- top-2 recommendation
   ndcg(t1.rec, t2.truth, 2), -- => 0.8128912838590544
+  
   -- top-3 recommendation
   ndcg(t1.rec, t2.truth, 3)  -- => 0.9187707805346093
-from
-  rec t1
-  join truth t2 on (t1.userid = t2.userid)
+from rec t1
+join truth t2 on (t1.userid = t2.userid)
 ;
 ```

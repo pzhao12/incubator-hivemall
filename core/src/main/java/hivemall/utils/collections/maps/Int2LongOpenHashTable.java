@@ -33,12 +33,7 @@ import java.util.Arrays;
 import javax.annotation.Nonnull;
 
 /**
- * An open-addressing hash table using double hashing.
- *
- * <pre>
- * Primary hash function: h1(k) = k mod m
- * Secondary hash function: h2(k) = 1 + (k mod(m-2))
- * </pre>
+ * An open-addressing hash table with double hashing
  * 
  * @see http://en.wikipedia.org/wiki/Double_hashing
  */
@@ -49,7 +44,7 @@ public class Int2LongOpenHashTable implements Externalizable {
     protected static final byte REMOVED = 2;
 
     public static final int DEFAULT_SIZE = 65536;
-    public static final float DEFAULT_LOAD_FACTOR = 0.75f;
+    public static final float DEFAULT_LOAD_FACTOR = 0.7f;
     public static final float DEFAULT_GROW_FACTOR = 2.0f;
 
     protected final transient float _loadFactor;
@@ -128,23 +123,23 @@ public class Int2LongOpenHashTable implements Externalizable {
         return _states;
     }
 
-    public boolean containsKey(final int key) {
+    public boolean containsKey(int key) {
         return findKey(key) >= 0;
     }
 
     /**
      * @return -1.f if not found
      */
-    public long get(final int key) {
-        final int i = findKey(key);
+    public long get(int key) {
+        int i = findKey(key);
         if (i < 0) {
             return defaultReturnValue;
         }
         return _values[i];
     }
 
-    public long put(final int key, final long value) {
-        final int hash = keyHash(key);
+    public long put(int key, long value) {
+        int hash = keyHash(key);
         int keyLength = _keys.length;
         int keyIdx = hash % keyLength;
 
@@ -154,9 +149,9 @@ public class Int2LongOpenHashTable implements Externalizable {
             keyIdx = hash % keyLength;
         }
 
-        final int[] keys = _keys;
-        final long[] values = _values;
-        final byte[] states = _states;
+        int[] keys = _keys;
+        long[] values = _values;
+        byte[] states = _states;
 
         if (states[keyIdx] == FULL) {// double hashing
             if (keys[keyIdx] == key) {
@@ -165,7 +160,7 @@ public class Int2LongOpenHashTable implements Externalizable {
                 return old;
             }
             // try second hash
-            final int decr = 1 + (hash % (keyLength - 2));
+            int decr = 1 + (hash % (keyLength - 2));
             for (;;) {
                 keyIdx -= decr;
                 if (keyIdx < 0) {
@@ -189,8 +184,8 @@ public class Int2LongOpenHashTable implements Externalizable {
     }
 
     /** Return weather the required slot is free for new entry */
-    protected boolean isFree(final int index, final int key) {
-        final byte stat = _states[index];
+    protected boolean isFree(int index, int key) {
+        byte stat = _states[index];
         if (stat == FREE) {
             return true;
         }
@@ -201,7 +196,7 @@ public class Int2LongOpenHashTable implements Externalizable {
     }
 
     /** @return expanded or not */
-    protected boolean preAddEntry(final int index) {
+    protected boolean preAddEntry(int index) {
         if ((_used + 1) >= _threshold) {// too filled
             int newCapacity = Math.round(_keys.length * _growFactor);
             ensureCapacity(newCapacity);
@@ -210,19 +205,19 @@ public class Int2LongOpenHashTable implements Externalizable {
         return false;
     }
 
-    protected int findKey(final int key) {
-        final int[] keys = _keys;
-        final byte[] states = _states;
-        final int keyLength = keys.length;
+    protected int findKey(int key) {
+        int[] keys = _keys;
+        byte[] states = _states;
+        int keyLength = keys.length;
 
-        final int hash = keyHash(key);
+        int hash = keyHash(key);
         int keyIdx = hash % keyLength;
         if (states[keyIdx] != FREE) {
             if (states[keyIdx] == FULL && keys[keyIdx] == key) {
                 return keyIdx;
             }
             // try second hash
-            final int decr = 1 + (hash % (keyLength - 2));
+            int decr = 1 + (hash % (keyLength - 2));
             for (;;) {
                 keyIdx -= decr;
                 if (keyIdx < 0) {
@@ -239,13 +234,13 @@ public class Int2LongOpenHashTable implements Externalizable {
         return -1;
     }
 
-    public long remove(final int key) {
-        final int[] keys = _keys;
-        final long[] values = _values;
-        final byte[] states = _states;
-        final int keyLength = keys.length;
+    public long remove(int key) {
+        int[] keys = _keys;
+        long[] values = _values;
+        byte[] states = _states;
+        int keyLength = keys.length;
 
-        final int hash = keyHash(key);
+        int hash = keyHash(key);
         int keyIdx = hash % keyLength;
         if (states[keyIdx] != FREE) {
             if (states[keyIdx] == FULL && keys[keyIdx] == key) {
@@ -255,7 +250,7 @@ public class Int2LongOpenHashTable implements Externalizable {
                 return old;
             }
             //  second hash
-            final int decr = 1 + (hash % (keyLength - 2));
+            int decr = 1 + (hash % (keyLength - 2));
             for (;;) {
                 keyIdx -= decr;
                 if (keyIdx < 0) {
@@ -288,22 +283,21 @@ public class Int2LongOpenHashTable implements Externalizable {
         this._used = 0;
     }
 
-    @Nonnull
-    public MapIterator entries() {
+    public IMapIterator entries() {
         return new MapIterator();
     }
 
     @Override
     public String toString() {
         int len = size() * 10 + 2;
-        final StringBuilder buf = new StringBuilder(len);
+        StringBuilder buf = new StringBuilder(len);
         buf.append('{');
-        final MapIterator itor = entries();
-        while (itor.next() != -1) {
-            buf.append(itor.getKey());
+        IMapIterator i = entries();
+        while (i.next() != -1) {
+            buf.append(i.getKey());
             buf.append('=');
-            buf.append(itor.getValue());
-            if (itor.hasNext()) {
+            buf.append(i.getValue());
+            if (i.hasNext()) {
                 buf.append(',');
             }
         }
@@ -311,30 +305,30 @@ public class Int2LongOpenHashTable implements Externalizable {
         return buf.toString();
     }
 
-    protected void ensureCapacity(final int newCapacity) {
+    protected void ensureCapacity(int newCapacity) {
         int prime = Primes.findLeastPrimeNumber(newCapacity);
         rehash(prime);
         this._threshold = Math.round(prime * _loadFactor);
     }
 
-    private void rehash(final int newCapacity) {
+    private void rehash(int newCapacity) {
         int oldCapacity = _keys.length;
         if (newCapacity <= oldCapacity) {
             throw new IllegalArgumentException("new: " + newCapacity + ", old: " + oldCapacity);
         }
-        final int[] newkeys = new int[newCapacity];
-        final long[] newValues = new long[newCapacity];
-        final byte[] newStates = new byte[newCapacity];
+        int[] newkeys = new int[newCapacity];
+        long[] newValues = new long[newCapacity];
+        byte[] newStates = new byte[newCapacity];
         int used = 0;
         for (int i = 0; i < oldCapacity; i++) {
             if (_states[i] == FULL) {
                 used++;
-                final int k = _keys[i];
-                final long v = _values[i];
-                final int hash = keyHash(k);
+                int k = _keys[i];
+                long v = _values[i];
+                int hash = keyHash(k);
                 int keyIdx = hash % newCapacity;
                 if (newStates[keyIdx] == FULL) {// second hashing
-                    final int decr = 1 + (hash % (newCapacity - 2));
+                    int decr = 1 + (hash % (newCapacity - 2));
                     while (newStates[keyIdx] != FREE) {
                         keyIdx -= decr;
                         if (keyIdx < 0) {
@@ -353,7 +347,7 @@ public class Int2LongOpenHashTable implements Externalizable {
         this._used = used;
     }
 
-    private static int keyHash(final int key) {
+    private static int keyHash(int key) {
         return key & 0x7fffffff;
     }
 
@@ -443,7 +437,22 @@ public class Int2LongOpenHashTable implements Externalizable {
         }
     }
 
-    public final class MapIterator {
+    public interface IMapIterator {
+
+        public boolean hasNext();
+
+        /**
+         * @return -1 if not found
+         */
+        public int next();
+
+        public int getKey();
+
+        public long getValue();
+
+    }
+
+    private final class MapIterator implements IMapIterator {
 
         int nextEntry;
         int lastEntry = -1;
@@ -464,9 +473,6 @@ public class Int2LongOpenHashTable implements Externalizable {
             return nextEntry < _keys.length;
         }
 
-        /**
-         * @return -1 if not found
-         */
         public int next() {
             if (!hasNext()) {
                 return -1;

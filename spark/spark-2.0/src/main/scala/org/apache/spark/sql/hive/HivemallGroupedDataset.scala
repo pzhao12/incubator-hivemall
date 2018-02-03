@@ -221,7 +221,7 @@ final class HivemallGroupedDataset(groupBy: RelationalGroupedDataset) {
   }
 
   /**
-   * @see hivemall.evaluation.F1ScoreUDAF
+   * @see hivemall.evaluation.FMeasureUDAF
    * @group evaluation
    */
   def f1score(predict: String, target: String): DataFrame = {
@@ -229,7 +229,7 @@ final class HivemallGroupedDataset(groupBy: RelationalGroupedDataset) {
     // checkType(predict, ArrayType(IntegerType))
     val udaf = HiveUDAFFunction(
         "f1score",
-        new HiveFunctionWrapper("hivemall.evaluation.F1ScoreUDAF"),
+        new HiveFunctionWrapper("hivemall.evaluation.FMeasureUDAF"),
         Seq(predict, target).map(df.col(_).expr),
         isUDAFBridgeRequired = true)
       .toAggregateExpression()

@@ -18,10 +18,10 @@
  */
 package hivemall.xgboost.classification;
 
-import hivemall.xgboost.XGBoostUDTF;
-
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+
+import hivemall.xgboost.XGBoostUDTF;
 
 /**
  * A XGBoost binary classification and the document is as follows; -
@@ -30,11 +30,9 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 @Description(
         name = "train_xgboost_classifier",
         value = "_FUNC_(string[] features, double target [, string options]) - Returns a relation consisting of <string model_id, array<byte> pred_model>")
-public final class XGBoostBinaryClassifierUDTF extends XGBoostUDTF {
+public class XGBoostBinaryClassifierUDTF extends XGBoostUDTF {
 
-    public XGBoostBinaryClassifierUDTF() {
-        super();
-    }
+    public XGBoostBinaryClassifierUDTF() {}
 
     {
         // Settings for binary classification
@@ -43,7 +41,7 @@ public final class XGBoostBinaryClassifierUDTF extends XGBoostUDTF {
     }
 
     @Override
-    protected void checkTargetValue(final double target) throws HiveException {
+    public void checkTargetValue(double target) throws HiveException {
         if (!(Double.compare(target, 0.0) == 0 || Double.compare(target, 1.0) == 0)) {
             throw new HiveException("target must be 0.0 or 1.0: " + target);
         }

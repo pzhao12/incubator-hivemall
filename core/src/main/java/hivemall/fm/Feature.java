@@ -23,7 +23,6 @@ import hivemall.utils.lang.NumberUtils;
 
 import java.nio.ByteBuffer;
 
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -31,7 +30,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 
 public abstract class Feature {
-    public static final int DEFAULT_NUM_FIELDS = 256;
+    public static final int DEFAULT_NUM_FIELDS = 1024;
     public static final int DEFAULT_FEATURE_BITS = 21;
     public static final int DEFAULT_NUM_FEATURES = 1 << 21; // 2^21    
 
@@ -52,11 +51,10 @@ public abstract class Feature {
         throw new UnsupportedOperationException();
     }
 
-    public void setFeatureIndex(@Nonnegative int i) {
+    public void setFeatureIndex(int i) {
         throw new UnsupportedOperationException();
     }
 
-    @Nonnegative
     public int getFeatureIndex() {
         throw new UnsupportedOperationException();
     }
@@ -129,7 +127,6 @@ public abstract class Feature {
         }
     }
 
-    @Nullable
     public static Feature[] parseFFMFeatures(@Nonnull final Object arg,
             @Nonnull final ListObjectInspector listOI, @Nullable final Feature[] probes,
             final int numFeatures, final int numFields) throws HiveException {
@@ -179,9 +176,6 @@ public abstract class Feature {
                 int index = parseFeatureIndex(fv);
                 return new IntFeature(index, 1.d);
             } else {
-                if ("0".equals(fv)) {
-                    throw new HiveException("Index value should not be 0: " + fv);
-                }
                 return new StringFeature(/* index */fv, 1.d);
             }
         } else {
@@ -193,9 +187,6 @@ public abstract class Feature {
                 return new IntFeature(index, value);
             } else {
                 double value = parseFeatureValue(valueStr);
-                if ("0".equals(indexStr)) {
-                    throw new HiveException("Index value should not be 0: " + fv);
-                }
                 return new StringFeature(/* index */indexStr, value);
             }
         }
@@ -204,12 +195,6 @@ public abstract class Feature {
     @Nonnull
     static IntFeature parseFFMFeature(@Nonnull final String fv) throws HiveException {
         return parseFFMFeature(fv, DEFAULT_NUM_FEATURES, DEFAULT_NUM_FIELDS);
-    }
-
-    @Nonnull
-    static IntFeature parseFFMFeature(@Nonnull final String fv, final int numFeatures)
-            throws HiveException {
-        return parseFFMFeature(fv, -1, DEFAULT_NUM_FIELDS);
     }
 
     @Nonnull
@@ -234,26 +219,25 @@ public abstract class Feature {
             } else {
                 index = MurmurHash3.murmurhash3(lead, numFields);
             }
-            short field = NumberUtils.castToShort(index);
+            short field = (short) index;
             double value = parseFeatureValue(rest);
             return new IntFeature(index, field, value);
         }
 
-
-        final short field;
-        if (NumberUtils.isDigits(lead)) {
-            field = parseField(lead, numFields);
-        } else {
-            field = NumberUtils.castToShort(MurmurHash3.murmurhash3(lead, numFields));
-        }
-
-        final int index;
         final String indexStr = rest.substring(0, pos2);
-        if (numFeatures == -1 && NumberUtils.isDigits(indexStr)) {
+        final int index;
+        final short field;
+        if (NumberUtils.isDigits(indexStr) && NumberUtils.isDigits(lead)) {
             index = parseFeatureIndex(indexStr);
+            if (index >= (numFeatures + numFields)) {
+                throw new HiveException("Feature index MUST be less than "
+                        + (numFeatures + numFields) + " but was " + index);
+            }
+            field = parseField(lead, numFields);
         } else {
             // +NUM_FIELD to avoid conflict to quantitative features
             index = MurmurHash3.murmurhash3(indexStr, numFeatures) + numFields;
+            field = (short) MurmurHash3.murmurhash3(lead, numFields);
         }
         String valueStr = rest.substring(pos2 + 1);
         double value = parseFeatureValue(valueStr);
@@ -269,9 +253,6 @@ public abstract class Feature {
                 int index = parseFeatureIndex(fv);
                 probe.setFeatureIndex(index);
             } else {
-                if ("0".equals(fv)) {
-                    throw new HiveException("Index value should not be 0: " + fv);
-                }
                 probe.setFeature(fv);
             }
             probe.value = 1.d;
@@ -283,9 +264,6 @@ public abstract class Feature {
                 probe.setFeatureIndex(index);
                 probe.value = parseFeatureValue(valueStr);
             } else {
-                if ("0".equals(indexStr)) {
-                    throw new HiveException("Index value should not be 0: " + fv);
-                }
                 probe.setFeature(indexStr);
                 probe.value = parseFeatureValue(valueStr);
             }
@@ -318,26 +296,27 @@ public abstract class Feature {
             } else {
                 index = MurmurHash3.murmurhash3(lead, numFields);
             }
-            short field = NumberUtils.castToShort(index);
+            short field = (short) index;
             probe.setField(field);
             probe.setFeatureIndex(index);
             probe.value = parseFeatureValue(rest);
             return;
         }
 
-        final short field;
-        if (NumberUtils.isDigits(lead)) {
-            field = parseField(lead, numFields);
-        } else {
-            field = NumberUtils.castToShort(MurmurHash3.murmurhash3(lead, numFields));
-        }
+        String indexStr = rest.substring(0, pos2);
         final int index;
-        final String indexStr = rest.substring(0, pos2);
-        if (numFeatures == -1 && NumberUtils.isDigits(indexStr)) {
+        final short field;
+        if (NumberUtils.isDigits(indexStr) && NumberUtils.isDigits(lead)) {
             index = parseFeatureIndex(indexStr);
+            if (index >= (numFeatures + numFields)) {
+                throw new HiveException("Feature index MUST be less than "
+                        + (numFeatures + numFields) + " but was " + index);
+            }
+            field = parseField(lead, numFields);
         } else {
             // +NUM_FIELD to avoid conflict to quantitative features
             index = MurmurHash3.murmurhash3(indexStr, numFeatures) + numFields;
+            field = (short) MurmurHash3.murmurhash3(lead, numFields);
         }
         probe.setField(field);
         probe.setFeatureIndex(index);
@@ -346,6 +325,7 @@ public abstract class Feature {
         probe.value = parseFeatureValue(valueStr);
     }
 
+
     private static int parseFeatureIndex(@Nonnull final String indexStr) throws HiveException {
         final int index;
         try {
@@ -353,7 +333,7 @@ public abstract class Feature {
         } catch (NumberFormatException e) {
             throw new HiveException("Invalid index value: " + indexStr, e);
         }
-        if (index <= 0) {
+        if (index < 0) {
             throw new HiveException("Feature index MUST be greater than 0: " + indexStr);
         }
         return index;
@@ -381,13 +361,7 @@ public abstract class Feature {
         return field;
     }
 
-    public static int toIntFeature(@Nonnull final Feature x) {
-        int index = x.getFeatureIndex();
-        return -index;
-    }
-
-    public static int toIntFeature(@Nonnull final Feature x, @Nonnegative final int yField,
-            @Nonnegative final int numFields) {
+    public static int toIntFeature(@Nonnull final Feature x, final int yField, final int numFields) {
         int index = x.getFeatureIndex();
         return index * numFields + yField;
     }

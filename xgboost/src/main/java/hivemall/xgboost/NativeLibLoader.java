@@ -18,15 +18,9 @@
  */
 package hivemall.xgboost;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.util.UUID;
-
 import javax.annotation.Nonnull;
 
 import org.apache.commons.logging.Log;
@@ -59,7 +53,6 @@ public final class NativeLibLoader {
         return NativeLibLoader.class.getResource(path) != null;
     }
 
-    @Nonnull
     private static String getOSName() {
         return System.getProperty("os.name");
     }
@@ -80,7 +73,7 @@ public final class NativeLibLoader {
             }
         }
         try {
-            File tempFile = createTempFileFromResource(resolvedLibName,
+            final File tempFile = createTempFileFromResource(resolvedLibName,
                 NativeLibLoader.class.getResourceAsStream(libPath + resolvedLibName));
             logger.info("Copyed the native library in JAR as " + tempFile.getAbsolutePath());
             addLibraryPath(tempFile.getParent());
@@ -96,7 +89,7 @@ public final class NativeLibLoader {
             logger.warn(userDefinedLib + " not found");
         } else {
             try {
-                File tempFile = createTempFileFromResource(userDefinedLibFile.getName(),
+                final File tempFile = createTempFileFromResource(userDefinedLibFile.getName(),
                     new FileInputStream(userDefinedLibFile.getAbsolutePath()));
                 logger.info("Copyed the user-defined native library as "
                         + tempFile.getAbsolutePath());
@@ -108,7 +101,6 @@ public final class NativeLibLoader {
         }
     }
 
-    @Nonnull
     private static String getPreffix(@Nonnull String fileName) {
         int point = fileName.lastIndexOf(".");
         if (point != -1) {
@@ -140,7 +132,7 @@ public final class NativeLibLoader {
         }
 
         // Prepare buffer for data copying
-        final byte[] buffer = new byte[8192];
+        byte[] buffer = new byte[8192];
         int readBytes;
 
         // Open output stream and copy the native library into the temporary one

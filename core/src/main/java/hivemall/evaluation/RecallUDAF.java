@@ -47,7 +47,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.io.LongWritable;
 
 @Description(
-        name = "recall_at",
+        name = "recall",
         value = "_FUNC_(array rankItems, array correctItems [, const int recommendSize = rankItems.size])"
                 + " - Returns Recall")
 public final class RecallUDAF extends AbstractGenericUDAFResolver {

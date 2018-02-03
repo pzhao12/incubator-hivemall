@@ -30,7 +30,6 @@ import org.junit.Test;
 
 public class AdaGradUDTFTest {
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testInitialize() throws UDFArgumentException {
         AdaGradUDTF udtf = new AdaGradUDTF();

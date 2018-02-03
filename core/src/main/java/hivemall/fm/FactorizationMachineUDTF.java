@@ -20,11 +20,11 @@ package hivemall.fm;
 
 import hivemall.UDTFWithOptions;
 import hivemall.common.ConversionState;
-import hivemall.fm.FMStringFeatureMapModel.Entry;
 import hivemall.optimizer.EtaEstimator;
 import hivemall.optimizer.LossFunctions;
 import hivemall.optimizer.LossFunctions.LossFunction;
 import hivemall.optimizer.LossFunctions.LossType;
+import hivemall.fm.FMStringFeatureMapModel.Entry;
 import hivemall.utils.collections.IMapIterator;
 import hivemall.utils.hadoop.HiveUtils;
 import hivemall.utils.io.FileUtils;
@@ -117,8 +117,8 @@ public class FactorizationMachineUDTF extends UDTFWithOptions {
         opts.addOption("c", "classification", false, "Act as classification");
         opts.addOption("seed", true, "Seed value [default: -1 (random)]");
         opts.addOption("iters", "iterations", true, "The number of iterations [default: 1]");
-        opts.addOption("p", "num_features", true, "The size of feature dimensions [default: -1]");
-        opts.addOption("f", "factors", true, "The number of the latent variables [default: 5]");
+        opts.addOption("p", "num_features", true, "The size of feature dimensions");
+        opts.addOption("factor", "factors", true, "The number of the latent variables [default: 5]");
         opts.addOption("sigma", true, "The standard deviation for initializing V [default: 0.1]");
         opts.addOption("lambda0", "lambda", true,
             "The initial lambda value for regularization [default: 0.01]");
@@ -376,7 +376,7 @@ public class FactorizationMachineUDTF extends UDTFWithOptions {
         double loss = _lossFunction.loss(p, y);
         _cvState.incrLoss(loss);
 
-        if (MathUtils.closeToZero(lossGrad, 1E-9d)) {
+        if (MathUtils.closeToZero(lossGrad)) {
             return;
         }
 
@@ -539,8 +539,8 @@ public class FactorizationMachineUDTF extends UDTFWithOptions {
                 }
                 inputBuf.flip();
 
-                for (int iter = 2; iter <= iterations; iter++) {
-                    _cvState.next();
+                int iter = 2;
+                for (; iter <= iterations; iter++) {
                     reportProgress(reporter);
                     setCounterValue(iterCounter, iter);
 
@@ -557,12 +557,12 @@ public class FactorizationMachineUDTF extends UDTFWithOptions {
                         ++_t;
                         train(x, y, adaregr);
                     }
-                    if (_cvState.isConverged(numTrainingExamples)) {
+                    if (_cvState.isConverged(iter, numTrainingExamples)) {
                         break;
                     }
                     inputBuf.rewind();
                 }
-                LOG.info("Performed " + _cvState.getCurrentIteration() + " iterations of "
+                LOG.info("Performed " + Math.min(iter, iterations) + " iterations of "
                         + NumberUtils.formatNumber(numTrainingExamples)
                         + " training examples on memory (thus " + NumberUtils.formatNumber(_t)
                         + " training updates in total) ");
@@ -587,8 +587,8 @@ public class FactorizationMachineUDTF extends UDTFWithOptions {
                 }
 
                 // run iterations
-                for (int iter = 2; iter <= iterations; iter++) {
-                    _cvState.next();
+                int iter = 2;
+                for (; iter <= iterations; iter++) {
                     setCounterValue(iterCounter, iter);
 
                     inputBuf.clear();
@@ -639,11 +639,11 @@ public class FactorizationMachineUDTF extends UDTFWithOptions {
                         }
                         inputBuf.compact();
                     }
-                    if (_cvState.isConverged(numTrainingExamples)) {
+                    if (_cvState.isConverged(iter, numTrainingExamples)) {
                         break;
                     }
                 }
-                LOG.info("Performed " + _cvState.getCurrentIteration() + " iterations of "
+                LOG.info("Performed " + Math.min(iter, iterations) + " iterations of "
                         + NumberUtils.formatNumber(numTrainingExamples)
                         + " training examples on a secondary storage (thus "
                         + NumberUtils.formatNumber(_t) + " training updates in total)");

@@ -103,10 +103,15 @@ public abstract class MulticlassOnlineClassifierUDTF extends LearnerBaseUDTF {
 
         processOptions(argOIs);
 
+        PrimitiveObjectInspector featureOutputOI = dense_model ? PrimitiveObjectInspectorFactory.javaIntObjectInspector
+                : featureInputOI;
         this.label2model = new HashMap<Object, PredictionModel>(64);
-        this.count = 0;
+        if (preloadedModelFile != null) {
+            loadPredictionModel(label2model, preloadedModelFile, labelInputOI, featureOutputOI);
+        }
 
-        return getReturnOI(labelInputOI, getFeatureOutputOI(featureInputOI));
+        this.count = 0;
+        return getReturnOI(labelInputOI, featureOutputOI);
     }
 
     @Override
@@ -114,8 +119,7 @@ public abstract class MulticlassOnlineClassifierUDTF extends LearnerBaseUDTF {
         return 8192;
     }
 
-    @Nonnull
-    protected PrimitiveObjectInspector processFeaturesOI(@Nonnull ObjectInspector arg)
+    protected PrimitiveObjectInspector processFeaturesOI(ObjectInspector arg)
             throws UDFArgumentException {
         this.featureListOI = (ListObjectInspector) arg;
         ObjectInspector featureRawOI = featureListOI.getListElementObjectInspector();
@@ -129,9 +133,8 @@ public abstract class MulticlassOnlineClassifierUDTF extends LearnerBaseUDTF {
         return HiveUtils.asPrimitiveObjectInspector(featureRawOI);
     }
 
-    @Nonnull
-    protected StructObjectInspector getReturnOI(@Nonnull ObjectInspector labelRawOI,
-            @Nonnull ObjectInspector featureOutputOI) {
+    protected StructObjectInspector getReturnOI(ObjectInspector labelRawOI,
+            ObjectInspector featureRawOI) {
         ArrayList<String> fieldNames = new ArrayList<String>();
         ArrayList<ObjectInspector> fieldOIs = new ArrayList<ObjectInspector>();
 
@@ -139,7 +142,8 @@ public abstract class MulticlassOnlineClassifierUDTF extends LearnerBaseUDTF {
         ObjectInspector labelOI = ObjectInspectorUtils.getStandardObjectInspector(labelRawOI);
         fieldOIs.add(labelOI);
         fieldNames.add("feature");
-        fieldOIs.add(featureOutputOI);
+        ObjectInspector featureOI = ObjectInspectorUtils.getStandardObjectInspector(featureRawOI);
+        fieldOIs.add(featureOI);
         fieldNames.add("weight");
         fieldOIs.add(PrimitiveObjectInspectorFactory.writableFloatObjectInspector);
         if (useCovariance()) {

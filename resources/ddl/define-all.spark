@@ -312,9 +312,6 @@ sqlContext.sql("CREATE TEMPORARY FUNCTION binarize_label AS 'hivemall.ftvec.tran
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS onehot_encoding")
 sqlContext.sql("CREATE TEMPORARY FUNCTION onehot_encoding AS 'hivemall.ftvec.trans.OnehotEncodingUDAF'")
 
-sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS add_field_indicies")
-sqlContext.sql("CREATE TEMPORARY FUNCTION add_field_indicies AS 'hivemall.ftvec.trans.AddFieldIndicesUDF'")
-
 /**
  * ranking helper functions
  */
@@ -339,8 +336,8 @@ sqlContext.sql("CREATE TEMPORARY FUNCTION tf AS 'hivemall.ftvec.text.TermFrequen
  * Regression functions
  */
 
-sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS train_regressor")
-sqlContext.sql("CREATE TEMPORARY FUNCTION train_regressor AS 'hivemall.regression.GeneralRegressorUDTF'")
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS train_regression")
+sqlContext.sql("CREATE TEMPORARY FUNCTION train_regression AS 'hivemall.regression.GeneralRegressionUDTF'")
 
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS logress")
 sqlContext.sql("CREATE TEMPORARY FUNCTION logress AS 'hivemall.regression.LogressUDTF'")
@@ -458,13 +455,6 @@ sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS to_ordered_map")
 sqlContext.sql("CREATE TEMPORARY FUNCTION to_ordered_map AS 'hivemall.tools.map.UDAFToOrderedMap'")
 
 /**
- * List functions
- */
-
-sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS to_ordered_list")
-sqlContext.sql("CREATE TEMPORARY FUNCTION to_ordered_list AS 'hivemall.tools.list.UDAFToOrderedList'")
-
-/**
  * Math functions
  */
 
@@ -514,9 +504,6 @@ sqlContext.sql("CREATE TEMPORARY FUNCTION tokenize AS 'hivemall.tools.text.Token
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS is_stopword")
 sqlContext.sql("CREATE TEMPORARY FUNCTION is_stopword AS 'hivemall.tools.text.StopwordUDF'")
 
-sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS singularize")
-sqlContext.sql("CREATE TEMPORARY FUNCTION singularize AS 'hivemall.tools.text.SingularizeUDF'")
-
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS split_words")
 sqlContext.sql("CREATE TEMPORARY FUNCTION split_words AS 'hivemall.tools.text.SplitWordsUDF'")
 
@@ -541,10 +528,7 @@ sqlContext.sql("CREATE TEMPORARY FUNCTION lr_datagen AS 'hivemall.dataset.Logist
  */
 
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS f1score")
-sqlContext.sql("CREATE TEMPORARY FUNCTION f1score AS 'hivemall.evaluation.F1ScoreUDAF'")
-
-sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS fmeasure")
-sqlContext.sql("CREATE TEMPORARY FUNCTION fmeasure AS 'hivemall.evaluation.FMeasureUDAF'")
+sqlContext.sql("CREATE TEMPORARY FUNCTION f1score AS 'hivemall.evaluation.FMeasureUDAF'")
 
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS mae")
 sqlContext.sql("CREATE TEMPORARY FUNCTION mae AS 'hivemall.evaluation.MeanAbsoluteErrorUDAF'")
@@ -561,11 +545,11 @@ sqlContext.sql("CREATE TEMPORARY FUNCTION r2 AS 'hivemall.evaluation.R2UDAF'")
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS ndcg")
 sqlContext.sql("CREATE TEMPORARY FUNCTION ndcg AS 'hivemall.evaluation.NDCGUDAF'")
 
-sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS precision_at")
-sqlContext.sql("CREATE TEMPORARY FUNCTION precision_at AS 'hivemall.evaluation.PrecisionUDAF'")
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS precision")
+sqlContext.sql("CREATE TEMPORARY FUNCTION precision AS 'hivemall.evaluation.PrecisionUDAF'")
 
-sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS recall_at")
-sqlContext.sql("CREATE TEMPORARY FUNCTION recall_at AS 'hivemall.evaluation.RecallUDAF'")
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS recall")
+sqlContext.sql("CREATE TEMPORARY FUNCTION recall AS 'hivemall.evaluation.RecallUDAF'")
 
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS mrr")
 sqlContext.sql("CREATE TEMPORARY FUNCTION mrr AS 'hivemall.evaluation.MRRUDAF'")
@@ -612,7 +596,7 @@ sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS train_ffm")
 sqlContext.sql("CREATE TEMPORARY FUNCTION train_ffm AS 'hivemall.fm.FieldAwareFactorizationMachineUDTF'")
 
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS ffm_predict")
-sqlContext.sql("CREATE TEMPORARY FUNCTION ffm_predict AS 'hivemall.fm.FFMPredictGenericUDAF'")
+sqlContext.sql("CREATE TEMPORARY FUNCTION ffm_predict AS 'hivemall.fm.FFMPredictUDF'")
 
 /**
  * Anomaly Detection
@@ -680,9 +664,6 @@ sqlContext.sql("CREATE TEMPORARY FUNCTION train_randomforest_regr AS 'hivemall.s
 
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS tree_predict")
 sqlContext.sql("CREATE TEMPORARY FUNCTION tree_predict AS 'hivemall.smile.tools.TreePredictUDF'")
-
-sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS tree_predict_v1")
-sqlContext.sql("CREATE TEMPORARY FUNCTION tree_predict_v1 AS 'hivemall.smile.tools.TreePredictUDFv1'")
 
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS tree_export")
 sqlContext.sql("CREATE TEMPORARY FUNCTION tree_export AS 'hivemall.smile.tools.TreeExportUDF'")

@@ -85,15 +85,19 @@ public abstract class BinaryOnlineClassifierUDTF extends LearnerBaseUDTF {
 
         processOptions(argOIs);
 
+        PrimitiveObjectInspector featureOutputOI = dense_model ? PrimitiveObjectInspectorFactory.javaIntObjectInspector
+                : featureInputOI;
         this.model = createModel();
+        if (preloadedModelFile != null) {
+            loadPredictionModel(model, preloadedModelFile, featureOutputOI);
+        }
+
         this.count = 0;
         this.sampled = 0;
-
-        return getReturnOI(getFeatureOutputOI(featureInputOI));
+        return getReturnOI(featureOutputOI);
     }
 
-    @Nonnull
-    protected PrimitiveObjectInspector processFeaturesOI(@Nonnull ObjectInspector arg)
+    protected PrimitiveObjectInspector processFeaturesOI(ObjectInspector arg)
             throws UDFArgumentException {
         this.featureListOI = (ListObjectInspector) arg;
         ObjectInspector featureRawOI = featureListOI.getListElementObjectInspector();
@@ -102,13 +106,13 @@ public abstract class BinaryOnlineClassifierUDTF extends LearnerBaseUDTF {
         return HiveUtils.asPrimitiveObjectInspector(featureRawOI);
     }
 
-    @Nonnull
-    protected StructObjectInspector getReturnOI(@Nonnull ObjectInspector featureOutputOI) {
+    protected StructObjectInspector getReturnOI(ObjectInspector featureRawOI) {
         ArrayList<String> fieldNames = new ArrayList<String>();
         ArrayList<ObjectInspector> fieldOIs = new ArrayList<ObjectInspector>();
 
         fieldNames.add("feature");
-        fieldOIs.add(featureOutputOI);
+        ObjectInspector featureOI = ObjectInspectorUtils.getStandardObjectInspector(featureRawOI);
+        fieldOIs.add(featureOI);
         fieldNames.add("weight");
         fieldOIs.add(PrimitiveObjectInspectorFactory.writableFloatObjectInspector);
         if (useCovariance()) {

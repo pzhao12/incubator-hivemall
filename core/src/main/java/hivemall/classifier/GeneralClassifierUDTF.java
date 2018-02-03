@@ -42,8 +42,7 @@ public final class GeneralClassifierUDTF extends GeneralLearnerBaseUDTF {
     @Override
     protected String getLossOptionDescription() {
         return "Loss function [HingeLoss (default), LogLoss, SquaredHingeLoss, ModifiedHuberLoss, or\n"
-                + "a regression loss: SquaredLoss, QuantileLoss, EpsilonInsensitiveLoss, "
-                + "SquaredEpsilonInsensitiveLoss, HuberLoss]";
+                + "a regression loss: SquaredLoss, QuantileLoss, EpsilonInsensitiveLoss, HuberLoss]";
     }
 
     @Override

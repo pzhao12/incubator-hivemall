@@ -16,15 +16,12 @@
   specific language governing permissions and limitations
   under the License.
 -->
-
+        
 This document explains how to compute [TF-IDF](http://en.wikipedia.org/wiki/Tf%E2%80%93idf) with Apache Hive/Hivemall.
 
 What you need to compute TF-IDF is a table/view composing (docid, word) pair, 2 views, and 1 query.
 
-<!-- toc -->
-
-> #### Note
-> This feature is supported since Hivemall v0.3-beta3 or later. Macro is supported since Hive 0.12 or later.
+_Note that this feature is supported since Hivemall v0.3-beta3 or later. Macro is supported since Hive 0.12 or later._
 
 # Define macros used in the TF-IDF computation
 ```sql

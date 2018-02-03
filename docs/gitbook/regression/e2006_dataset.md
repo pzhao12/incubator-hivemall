@@ -17,11 +17,13 @@
   under the License.
 -->
         
+http://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression.html#E2006-tfidf
+
 Prerequisite
 ============
-
-* [E2006-tfidf Dataset](http://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression.html#E2006-tfidf)
-* [conv.awk](https://github.com/apache/incubator-hivemall/blob/master/resources/misc/conv.awk)
+* [hivemall.jar](https://github.com/myui/hivemall/tree/master/target/hivemall.jar)
+* [conv.awk](https://github.com/myui/hivemall/tree/master/scripts/misc/conv.awk)
+* [define-all.hive](https://github.com/myui/hivemall/tree/master/scripts/ddl/define-all.hive)
 
 Data preparation
 ================
@@ -41,7 +43,12 @@ hadoop fs -put E2006.test.tsv /dataset/E2006-tfidf/test
 create database E2006;
 use E2006;
 
-create external table e2006tfidf_train (
+delete jar /home/myui/tmp/hivemall.jar;
+add jar /home/myui/tmp/hivemall.jar;
+
+source /home/myui/tmp/define-all.hive;
+
+Create external table e2006tfidf_train (
   rowid int,
   target float,
   features ARRAY<STRING>
@@ -49,7 +56,7 @@ create external table e2006tfidf_train (
 ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' COLLECTION ITEMS TERMINATED BY "," 
 STORED AS TEXTFILE LOCATION '/dataset/E2006-tfidf/train';
 
-create external table e2006tfidf_test (
+Create external table e2006tfidf_test (
   rowid int, 
   target float,
   features ARRAY<STRING>
@@ -61,28 +68,24 @@ create table e2006tfidf_test_exploded as
 select 
   rowid,
   target,
-  -- split(feature,":")[0] as feature,
-  -- cast(split(feature,":")[1] as float) as value
+  split(feature,":")[0] as feature,
+  cast(split(feature,":")[1] as float) as value
   -- hivemall v0.3.1 or later
-  extract_feature(feature) as feature,
-  extract_weight(feature) as value
+  -- extract_feature(feature) as feature,
+  -- extract_weight(feature) as value
 from 
-  e2006tfidf_test LATERAL VIEW explode(add_bias(features)) t AS feature;
+  e2006tfidf_test LATERAL VIEW explode(addBias(features)) t AS feature;
 ```
 
 ## Amplify training examples (global shuffle)
-
 ```sql
 -- set mapred.reduce.tasks=32;
 set hivevar:seed=31;
 set hivevar:xtimes=3;
-
 create or replace view e2006tfidf_train_x3 as 
 select * from (
-  select amplify(${xtimes}, *) as (rowid, target, features)
-  from e2006tfidf_train
+select amplify(${xtimes}, *) as (rowid, target, features) from e2006tfidf_train
 ) t
 CLUSTER BY rand(${seed});
-
 -- set mapred.reduce.tasks=-1;
 ```
